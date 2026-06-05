@@ -33,14 +33,14 @@ function formatPrice(price: number) {
 function MenuItemCard({ item }: { item: MenuItem }) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-100 flex flex-col">
-      <div className="w-full aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
+      <div className="relative aspect-[4/3] bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
         {item.image_url ? (
           <Image
             src={item.image_url}
             alt={item.name}
-            width={800}
-            height={600}
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
           <span className="text-5xl select-none">🍢</span>
