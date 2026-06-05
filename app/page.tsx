@@ -148,8 +148,8 @@ export default async function HomePage() {
             Japanese Street Food · Jakarta
           </p>
           <h1 className="text-white font-bold tracking-tight mb-5"
-            style={{ fontSize: "clamp(4rem, 14vw, 7rem)", lineHeight: 1 }}>
-            Guudo
+            style={{ fontSize: "clamp(3rem, 10vw, 6rem)", lineHeight: 1 }}>
+            Guudo Foods
           </h1>
           <p className="text-white/55 text-lg sm:text-xl leading-relaxed mb-10 max-w-sm mx-auto">
             Yakitori & rice bowls autentik. Dibuat segar, dijual cepat.
