@@ -67,9 +67,9 @@ function MenuItemCard({ item }: { item: MenuItem }) {
 function AddonCard({ item }: { item: MenuItem }) {
   return (
     <div className="bg-white rounded-xl p-3 border border-stone-100 shadow-sm flex items-center gap-3">
-      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-900 to-stone-800 overflow-hidden flex items-center justify-center flex-shrink-0">
+      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
         {item.image_url ? (
-          <Image src={item.image_url} alt={item.name} width={48} height={48} className="w-full h-full object-cover" />
+          <Image src={item.image_url} alt={item.name} fill className="object-cover" sizes="48px" />
         ) : (
           <span className="text-xl select-none">🍢</span>
         )}
