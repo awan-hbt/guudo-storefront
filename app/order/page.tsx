@@ -466,7 +466,7 @@ export default function OrderPage() {
                               key={item.id}
                               className="bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex"
                             >
-                              <div className="relative w-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
+                              <div className="relative w-28 h-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
                                 {item.imageUrl ? (
                                   <Image
                                     src={item.imageUrl}
