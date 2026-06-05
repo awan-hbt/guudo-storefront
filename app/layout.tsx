@@ -15,14 +15,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Guudo — Japanese Street Food",
   description:
-    "Yakitori & rice bowls autentik di Jakarta. Pesan sekarang sebelum habis.",
+    "Authentic yakitori & rice bowls in Jakarta. Order now before it sells out.",
   metadataBase: new URL("https://guudo.id"),
   openGraph: {
     title: "Guudo — Japanese Street Food",
-    description: "Yakitori & rice bowls autentik di Jakarta.",
+    description: "Authentic yakitori & rice bowls in Jakarta.",
     url: "https://guudo.id",
     siteName: "Guudo",
-    locale: "id_ID",
+    locale: "en_US",
     type: "website",
   },
 };
@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="id"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="min-h-screen">{children}</body>

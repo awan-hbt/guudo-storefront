@@ -32,8 +32,8 @@ function formatPrice(n: number) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StockBadge({ stock }: { stock: number }) {
-  if (stock <= 0) return <span className="text-xs font-semibold text-red-500">Habis</span>;
-  if (stock <= 5) return <span className="text-xs font-semibold text-amber-600">Sisa {stock}</span>;
+  if (stock <= 0) return <span className="text-xs font-semibold text-red-500">Sold Out</span>;
+  if (stock <= 5) return <span className="text-xs font-semibold text-amber-600">{stock} left</span>;
   return null;
 }
 
@@ -55,7 +55,7 @@ function QtyControl({
         disabled={disabled}
         className="px-3 py-1.5 text-sm font-semibold rounded-full bg-amber-500 text-white hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        {disabled ? "Habis" : "+ Tambah"}
+        {disabled ? "Sold Out" : "+ Add"}
       </button>
     );
   }
@@ -241,10 +241,10 @@ export default function OrderPage() {
   // ── Place order ──
   async function placeOrder() {
     setFormError("");
-    if (!name.trim()) { setFormError("Masukkan namamu."); return; }
-    if (!phone.trim()) { setFormError("Masukkan nomor HP."); return; }
-    if (!building) { setFormError("Pilih gedung tujuan."); return; }
-    if (cartItems.length === 0) { setFormError("Keranjang kosong."); return; }
+    if (!name.trim()) { setFormError("Please enter your name."); return; }
+    if (!phone.trim()) { setFormError("Please enter your phone number."); return; }
+    if (!building) { setFormError("Please select a building."); return; }
+    if (cartItems.length === 0) { setFormError("Your cart is empty."); return; }
 
     setSubmitting(true);
     setOrderError("");
@@ -270,7 +270,7 @@ export default function OrderPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setOrderError(data.error ?? "Gagal membuat pesanan. Coba lagi.");
+        setOrderError(data.error ?? "Failed to place order. Please try again.");
         setSubmitting(false);
         return;
       }
@@ -297,7 +297,7 @@ export default function OrderPage() {
         startQrisPolling(data.referenceCode);
       }
     } catch {
-      setOrderError("Terjadi kesalahan. Periksa koneksimu dan coba lagi.");
+      setOrderError("Something went wrong. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -343,7 +343,7 @@ export default function OrderPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fileName: receiptFile.name }),
       });
-      if (!signRes.ok) throw new Error("Gagal mendapatkan upload URL");
+      if (!signRes.ok) throw new Error("Failed to get upload URL");
       const { signedUrl, publicUrl } = await signRes.json();
 
       // 2. Upload file
@@ -352,7 +352,7 @@ export default function OrderPage() {
         body: receiptFile,
         headers: { "Content-Type": receiptFile.type || "application/octet-stream" },
       });
-      if (!uploadRes.ok) throw new Error("Gagal upload file");
+      if (!uploadRes.ok) throw new Error("Failed to upload file");
 
       // 3. Save receipt URL to order
       const patchRes = await fetch("/api/orders/receipt", {
@@ -362,7 +362,7 @@ export default function OrderPage() {
       });
       if (!patchRes.ok) {
         const d = await patchRes.json();
-        throw new Error(d.error ?? "Gagal menyimpan bukti bayar");
+        throw new Error(d.error ?? "Failed to save payment proof");
       }
 
       setUploadState("done");
@@ -375,7 +375,7 @@ export default function OrderPage() {
       } catch {}
       setTimeout(() => setStep("confirmed"), 1000);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Upload gagal. Coba lagi.");
+      setUploadError(err instanceof Error ? err.message : "Upload failed. Please try again.");
       setUploadState("error");
     }
   }
@@ -424,7 +424,7 @@ export default function OrderPage() {
                 }}
                 className="text-stone-500 hover:text-stone-900 text-sm transition-colors flex items-center gap-1"
               >
-                ← Kembali
+                ← Back
               </button>
             )}
           </div>
@@ -437,9 +437,9 @@ export default function OrderPage() {
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 text-sm text-stone-400">
             <span className={step === "checkout" ? "text-amber-600 font-semibold" : ""}>Checkout</span>
             <span>›</span>
-            <span className={step === "payment" ? "text-amber-600 font-semibold" : ""}>Pembayaran</span>
+            <span className={step === "payment" ? "text-amber-600 font-semibold" : ""}>Payment</span>
             <span>›</span>
-            <span className={step === "confirmed" ? "text-amber-600 font-semibold" : ""}>Selesai</span>
+            <span className={step === "confirmed" ? "text-amber-600 font-semibold" : ""}>Done</span>
           </div>
         </div>
       )}
@@ -452,7 +452,7 @@ export default function OrderPage() {
               {/* Menu */}
               <div className="flex-1 min-w-0">
                 {loading ? (
-                  <div className="text-center py-20 text-stone-400">Memuat menu...</div>
+                  <div className="text-center py-20 text-stone-400">Loading menu...</div>
                 ) : (
                   <>
                     {mainItems.length > 0 && (
@@ -577,7 +577,7 @@ export default function OrderPage() {
               <span className="bg-amber-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                 {cartCount}
               </span>
-              <span>Lihat Keranjang</span>
+              <span>View Cart</span>
               <span className="text-stone-400 text-sm">{formatPrice(totalPrice)}</span>
             </button>
           </div>
@@ -592,7 +592,7 @@ export default function OrderPage() {
             />
             <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-stone-900 text-lg">Keranjang</h3>
+                <h3 className="font-bold text-stone-900 text-lg">Cart</h3>
                 <button onClick={() => setCartOpen(false)} className="text-stone-400 hover:text-stone-700">
                   ✕
                 </button>
@@ -612,11 +612,11 @@ export default function OrderPage() {
         {/* ══ STEP: CHECKOUT ══════════════════════════════════════════════════ */}
         {step === "checkout" && (
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-            <h1 className="text-2xl font-bold text-stone-900 mb-8">Detail Pesanan</h1>
+            <h1 className="text-2xl font-bold text-stone-900 mb-8">Order Details</h1>
 
             {/* Order summary */}
             <div className="bg-white rounded-2xl border border-stone-100 p-5 mb-6">
-              <h2 className="font-semibold text-stone-700 text-sm mb-3">Ringkasan Pesanan</h2>
+              <h2 className="font-semibold text-stone-700 text-sm mb-3">Order Summary</h2>
               <div className="space-y-2 mb-4">
                 {cartItems.map(({ menuItem, quantity }) => (
                   <div key={menuItem.id} className="flex justify-between text-sm">
@@ -638,23 +638,23 @@ export default function OrderPage() {
 
             {/* Contact form */}
             <div className="bg-white rounded-2xl border border-stone-100 p-5 mb-6">
-              <h2 className="font-semibold text-stone-700 text-sm mb-4">Data Pemesan</h2>
+              <h2 className="font-semibold text-stone-700 text-sm mb-4">Your Details</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Nama <span className="text-red-500">*</span>
+                    Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Nama kamu"
+                    placeholder="Your name"
                     className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Nomor HP (WhatsApp) <span className="text-red-500">*</span>
+                    Phone Number (WhatsApp) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -666,14 +666,14 @@ export default function OrderPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Gedung <span className="text-red-500">*</span>
+                    Building <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={building}
                     onChange={(e) => { setBuilding(e.target.value); setFloor(""); }}
                     className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition bg-white"
                   >
-                    <option value="">Pilih gedung…</option>
+                    <option value="">Select building…</option>
                     <option value="RDTX Square">RDTX Square</option>
                     <option value="Kuttab Ummul Quro Pusat">Kuttab Ummul Quro Pusat</option>
                     <option value="Petrolab Services-Utan Kayu">Petrolab Services-Utan Kayu</option>
@@ -682,14 +682,14 @@ export default function OrderPage() {
                 {building === "RDTX Square" ? (
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Lantai
+                      Floor
                     </label>
                     <select
                       value={floor}
                       onChange={(e) => setFloor(e.target.value)}
                       className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition bg-white"
                     >
-                      <option value="">Pilih lantai…</option>
+                      <option value="">Select floor…</option>
                       <option value="3F">3F</option>
                       <option value="18F">18F</option>
                     </select>
@@ -697,13 +697,13 @@ export default function OrderPage() {
                 ) : (
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Lantai / Nomor Ruang / Keterangan Lainnya
+                      Floor / Room Number / Other Notes
                     </label>
                     <input
                       type="text"
                       value={floor}
                       onChange={(e) => setFloor(e.target.value)}
-                      placeholder="Contoh: Lantai 2, lobby, dll."
+                      placeholder="e.g. Floor 2, lobby, etc."
                       className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                     />
                   </div>
@@ -713,7 +713,7 @@ export default function OrderPage() {
 
             {/* Payment method */}
             <div className="bg-white rounded-2xl border border-stone-100 p-5 mb-6">
-              <h2 className="font-semibold text-stone-700 text-sm mb-4">Metode Pembayaran</h2>
+              <h2 className="font-semibold text-stone-700 text-sm mb-4">Payment Method</h2>
               <div className="space-y-3">
                 {ipaymuEnabled && (
                   <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "qris" ? "border-amber-400 bg-amber-50" : "border-stone-200 hover:border-stone-300"}`}>
@@ -728,7 +728,7 @@ export default function OrderPage() {
                     <div>
                       <p className="font-semibold text-stone-900 text-sm">QRIS</p>
                       <p className="text-stone-500 text-xs mt-0.5">
-                        Bayar via GoPay, OVO, Dana, ShopeePay, dll.
+                        Pay via GoPay, OVO, Dana, ShopeePay, etc.
                       </p>
                     </div>
                   </label>
@@ -763,7 +763,7 @@ export default function OrderPage() {
               disabled={submitting || cartItems.length === 0}
               className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-stone-200 disabled:text-stone-400 text-white font-bold py-4 rounded-2xl text-base transition-colors"
             >
-              {submitting ? "Memproses..." : `Buat Pesanan · ${formatPrice(totalPrice)}`}
+              {submitting ? "Processing..." : `Place Order · ${formatPrice(totalPrice)}`}
             </button>
           </div>
         )}
@@ -771,9 +771,9 @@ export default function OrderPage() {
         {/* ══ STEP: PAYMENT — QRIS ════════════════════════════════════════════ */}
         {step === "payment" && paymentMethod === "qris" && (
           <div className="max-w-md mx-auto px-4 sm:px-6 py-10 text-center">
-            <h1 className="text-2xl font-bold text-stone-900 mb-2">Scan QR untuk Bayar</h1>
+            <h1 className="text-2xl font-bold text-stone-900 mb-2">Scan QR to Pay</h1>
             <p className="text-stone-500 text-sm mb-1">
-              Kode Referensi: <span className="font-bold text-stone-900">{referenceCode}</span>
+              Reference Code: <span className="font-bold text-stone-900">{referenceCode}</span>
             </p>
             <p className="text-amber-600 font-bold text-xl mb-6">{formatPrice(totalPrice)}</p>
 
@@ -790,26 +790,26 @@ export default function OrderPage() {
               </div>
             ) : (
               <div className="bg-amber-50 text-amber-700 rounded-xl px-4 py-3 text-sm mb-6">
-                QR Code belum tersedia. Silakan gunakan transfer bank.
+                QR Code not available. Please use bank transfer.
               </div>
             )}
 
             {qrisStatus === "waiting" && (
               <div className="flex items-center justify-center gap-2 text-stone-500 text-sm mb-4">
                 <span className="inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                Menunggu pembayaran…
+                Waiting for payment…
               </div>
             )}
 
             {qrisStatus === "timeout" && (
               <div className="bg-orange-50 border border-orange-200 text-orange-700 rounded-xl px-4 py-3 text-sm mb-4">
-                Waktu habis. Hubungi kami jika sudah transfer.
+                Timed out. Contact us if you’ve already paid.
               </div>
             )}
 
             <p className="text-stone-400 text-xs mb-6">
-              Scan dengan GoPay, OVO, Dana, ShopeePay, atau m-banking lain.
-              Masukkan nominal pesanan secara manual.
+              Scan with GoPay, OVO, Dana, ShopeePay, or any mobile banking app.
+              Enter the amount manually.
             </p>
 
             <button
@@ -819,7 +819,7 @@ export default function OrderPage() {
               }}
               className="text-stone-500 hover:text-stone-800 text-sm underline transition-colors"
             >
-              Ganti ke QRIS Statis
+              Switch to Static QRIS
             </button>
           </div>
         )}
@@ -827,9 +827,9 @@ export default function OrderPage() {
         {/* ══ STEP: PAYMENT — STATIC QRIS ═══════════════════════════════════ */}
         {step === "payment" && paymentMethod === "transfer" && (
           <div className="max-w-md mx-auto px-4 sm:px-6 py-10 text-center">
-            <h1 className="text-2xl font-bold text-stone-900 mb-2">Bayar dengan QRIS</h1>
+            <h1 className="text-2xl font-bold text-stone-900 mb-2">Pay with QRIS</h1>
             <p className="text-stone-500 text-sm mb-1">
-              Kode Referensi: <span className="font-bold text-stone-900">{referenceCode}</span>
+              Reference Code: <span className="font-bold text-stone-900">{referenceCode}</span>
             </p>
             <p className="text-amber-600 font-bold text-xl mb-6">{formatPrice(totalPrice)}</p>
 
@@ -845,14 +845,14 @@ export default function OrderPage() {
               />
             </div>
             <p className="text-stone-500 text-sm mb-6">
-              Scan dengan GoPay, OVO, Dana, ShopeePay, atau m-banking lain.<br />
-              Masukkan nominal <span className="font-bold text-stone-900">{formatPrice(totalPrice)}</span> secara manual.
+              Scan with GoPay, OVO, Dana, ShopeePay, or any mobile banking app.<br />
+              Enter the amount <span className="font-bold text-stone-900">{formatPrice(totalPrice)}</span> manually.
             </p>
 
             {/* Receipt upload */}
             <div className="bg-white rounded-2xl border border-stone-100 p-5 mb-6 text-left">
               <p className="text-xs text-stone-400 uppercase tracking-wide font-semibold mb-3">
-                Upload Bukti Pembayaran
+                Upload Payment Proof
               </p>
 
               <label className="block cursor-pointer">
@@ -866,8 +866,8 @@ export default function OrderPage() {
                     </>
                   ) : (
                     <>
-                      <p className="text-stone-500 text-sm">Tap untuk pilih foto</p>
-                      <p className="text-stone-400 text-xs mt-1">JPG, PNG, atau PDF</p>
+                      <p className="text-stone-500 text-sm">Tap to choose a photo</p>
+                      <p className="text-stone-400 text-xs mt-1">JPG, PNG, or PDF</p>
                     </>
                   )}
                 </div>
@@ -893,7 +893,7 @@ export default function OrderPage() {
 
             {uploadState === "done" && (
               <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm mb-4">
-                Bukti transfer berhasil dikirim! ✓
+                Payment proof sent! ✓
               </div>
             )}
 
@@ -903,17 +903,17 @@ export default function OrderPage() {
               className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-stone-200 disabled:text-stone-400 text-white font-bold py-4 rounded-2xl text-base transition-colors mb-3"
             >
               {uploadState === "uploading"
-                ? "Mengupload..."
+                ? "Uploading..."
                 : uploadState === "done"
-                ? "Terkirim ✓"
-                : "Kirim Bukti Bayar"}
+                ? "Sent ✓"
+                : "Send Payment Proof"}
             </button>
 
             <button
               onClick={() => setStep("confirmed")}
               className="w-full text-stone-500 hover:text-stone-800 text-sm py-2 transition-colors"
             >
-              Upload nanti →
+              Upload later →
             </button>
           </div>
         )}
@@ -927,25 +927,25 @@ export default function OrderPage() {
               </svg>
             </div>
 
-            <h1 className="text-2xl font-bold text-stone-900 mb-2">Pesanan Diterima!</h1>
+            <h1 className="text-2xl font-bold text-stone-900 mb-2">Order Received!</h1>
             <p className="text-stone-500 text-base mb-6">
               {paymentMethod === "qris"
-                ? "Pembayaranmu telah dikonfirmasi."
-                : "Pesananmu sudah masuk. Kami akan konfirmasi setelah cek bukti transfer."}
+                ? "Your payment has been confirmed."
+                : "Your order is in. We\u2019ll confirm after reviewing your transfer proof."}
             </p>
 
             <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 mb-8">
               <p className="text-amber-700 text-xs font-semibold uppercase tracking-widest mb-2">
-                Kode Referensi
+                Reference Code
               </p>
               <p className="text-stone-900 text-3xl font-bold tracking-widest">{referenceCode}</p>
               <p className="text-stone-500 text-sm mt-2">
-                Tunjukkan kode ini saat pengambilan pesanan.
+                Show this code when picking up your order.
               </p>
             </div>
 
             <p className="text-stone-400 text-sm mb-8">
-              Notifikasi akan dikirim ke WhatsApp{" "}
+              A notification will be sent to WhatsApp{" "}
               <span className="font-medium text-stone-600">{phone}</span>.
             </p>
 
@@ -954,7 +954,7 @@ export default function OrderPage() {
               onClick={() => { try { sessionStorage.removeItem("guudo_payment"); } catch {} }}
               className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white font-semibold px-8 py-4 rounded-full transition-all"
             >
-              Kembali ke Beranda
+              Back to Home
             </Link>
           </div>
         )}
@@ -976,9 +976,9 @@ function CartPanel({
 }) {
   return (
     <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
-      <h3 className="font-bold text-stone-900 mb-4">Keranjang</h3>
+      <h3 className="font-bold text-stone-900 mb-4">Cart</h3>
       {cartItems.length === 0 ? (
-        <p className="text-stone-400 text-sm text-center py-4">Belum ada item</p>
+      <p className="text-stone-400 text-sm text-center py-4">No items yet</p>
       ) : (
         <>
           <div className="space-y-3 mb-4">
@@ -1005,7 +1005,7 @@ function CartPanel({
             onClick={onProceed}
             className="w-full bg-amber-500 hover:bg-amber-400 text-white font-bold py-3 rounded-xl text-sm transition-colors"
           >
-            Lanjut ke Checkout →
+            Proceed to Checkout →
           </button>
         </>
       )}

@@ -6,32 +6,32 @@ export const metadata = {
 
 const faqs = [
   {
-    q: "Apakah stok bisa habis?",
-    a: "Ya. Kami memasak dalam jumlah terbatas setiap hari untuk menjaga kualitas. Pesan lebih awal untuk menghindari kehabisan.",
+    q: "Can stock run out?",
+    a: "Yes. We cook in limited quantities each day to maintain quality. Order early to avoid missing out.",
   },
   {
-    q: "Bagaimana cara mengambil pesanan?",
-    a: "Setelah order dikonfirmasi, datang ke booth Guudo dan tunjukkan kode referensimu (contoh: GD-1234). Pesananmu akan langsung diproses.",
+    q: "How do I pick up my order?",
+    a: "Once your order is confirmed, come to the Guudo booth and show your reference code (e.g. GD-1234). Your order will be prepared right away.",
   },
   {
-    q: "Berapa lama proses konfirmasi transfer?",
-    a: "Kami konfirmasi manual setiap hari. Biasanya dalam 1–2 jam selama jam operasional. Kamu akan dapat notifikasi WhatsApp.",
+    q: "How long does transfer confirmation take?",
+    a: "We confirm manually every day — usually within 1–2 hours during operating hours. You’ll receive a WhatsApp notification.",
   },
   {
-    q: "Apakah bisa refund atau cancel?",
-    a: "Pesanan yang sudah dikonfirmasi tidak bisa dicancel karena bahan makanan sudah disiapkan. Lihat kebijakan lengkapnya di halaman Kebijakan Refund.",
+    q: "Can I refund or cancel my order?",
+    a: "Confirmed orders cannot be cancelled because ingredients are already prepared. See our full policy on the Refund Policy page.",
   },
   {
-    q: "Metode pembayaran apa yang tersedia?",
-    a: "QRIS (GoPay, OVO, Dana, ShopeePay, dll.) dan transfer bank manual.",
+    q: "What payment methods are available?",
+    a: "QRIS (GoPay, OVO, Dana, ShopeePay, etc.) and manual bank transfer.",
   },
   {
-    q: "Ada minimum order?",
-    a: "Tidak ada minimum order. Kamu bisa pesan 1 porsi saja.",
+    q: "Is there a minimum order?",
+    a: "No minimum order. You can order just 1 portion.",
   },
   {
-    q: "Apakah ada layanan delivery?",
-    a: "Untuk saat ini Guudo hanya tersedia untuk pickup di lokasi. Tidak ada layanan delivery.",
+    q: "Is delivery available?",
+    a: "Guudo is currently pickup-only. No delivery service.",
   },
 ];
 
@@ -50,7 +50,7 @@ export default function FAQPage() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h1 className="text-3xl font-bold text-stone-900 mb-2">FAQ</h1>
-        <p className="text-stone-500 mb-10">Pertanyaan yang sering ditanyakan.</p>
+        <p className="text-stone-500 mb-10">Frequently asked questions.</p>
 
         <div className="space-y-4">
           {faqs.map(({ q, a }, i) => (
@@ -66,7 +66,7 @@ export default function FAQPage() {
             href="/order"
             className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-semibold px-8 py-3 rounded-full transition-colors"
           >
-            Pesan Sekarang
+            Order Now
           </Link>
         </div>
       </main>

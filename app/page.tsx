@@ -108,16 +108,16 @@ export default async function HomePage() {
               Menu
             </a>
             <a
-              href="#cara-pesan"
+              href="#how-to-order"
               className="text-white/60 hover:text-white text-sm transition-colors hidden sm:inline"
             >
-              Cara Pesan
+              How to Order
             </a>
             <Link
               href="/order"
               className="bg-amber-500 hover:bg-amber-400 text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
             >
-              Pesan Sekarang
+              Order Now
             </Link>
           </div>
         </div>
@@ -152,20 +152,20 @@ export default async function HomePage() {
             Guudo Foods
           </h1>
           <p className="text-white/55 text-lg sm:text-xl leading-relaxed mb-10 max-w-sm mx-auto">
-            Yakitori & rice bowls autentik. Dibuat segar, dijual cepat.
+            Authentic yakitori & rice bowls. Made fresh, sold fast.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/order"
               className="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-white font-semibold px-8 py-4 rounded-full text-base transition-all hover:scale-105 active:scale-100 shadow-lg shadow-amber-500/25"
             >
-              Pesan Sekarang
+              Order Now
             </Link>
             <a
               href="#menu"
               className="inline-flex items-center justify-center gap-2 bg-white/8 hover:bg-white/15 text-white/80 font-semibold px-8 py-4 rounded-full text-base transition-all border border-white/15"
             >
-              Lihat Menu
+              View Menu
             </a>
           </div>
         </div>
@@ -186,10 +186,10 @@ export default async function HomePage() {
               Our Menu
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
-              Pilihan Menu
+              Our Menu
             </h2>
             <p className="text-stone-500 mt-3 text-base max-w-sm mx-auto">
-              Semua dibuat fresh dari bahan pilihan.
+              All made fresh with quality ingredients.
             </p>
           </div>
 
@@ -224,7 +224,7 @@ export default async function HomePage() {
               href="/order"
               className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white font-semibold px-10 py-4 rounded-full text-base transition-all"
             >
-              Mulai Order
+              Start Order
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
@@ -234,34 +234,34 @@ export default async function HomePage() {
       </section>
 
       {/* ─── About ─── */}
-      <section id="tentang" className="py-20 px-4 sm:px-6 bg-stone-900">
+      <section id="about" className="py-20 px-4 sm:px-6 bg-stone-900">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-amber-400 text-xs font-semibold tracking-[0.3em] uppercase mb-3">
             Our Story
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Tentang Guudo
+            About Guudo
           </h2>
           <p className="text-white/60 text-base sm:text-lg leading-relaxed mb-4">
-            Guudo lahir dari kecintaan terhadap street food Jepang — khususnya
-            yakitori yang dibuat dengan arang binchotan dan saus tare rahasia kami.
+            Guudo was born from a love of Japanese street food — especially
+            yakitori made with binchotan charcoal and our secret tare sauce.
           </p>
           <p className="text-white/60 text-base sm:text-lg leading-relaxed">
-            Setiap porsi dibuat fresh saat kamu pesan. Kami jual dalam jumlah
-            terbatas setiap hari supaya kualitasnya selalu terjaga.
+            Every portion is made fresh when you order. We sell in limited
+            quantities each day to ensure consistent quality.
           </p>
         </div>
       </section>
 
       {/* ─── How to Order ─── */}
-      <section id="cara-pesan" className="py-20 px-4 sm:px-6">
+      <section id="how-to-order" className="py-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-amber-600 text-xs font-semibold tracking-[0.3em] uppercase mb-2">
-              Mudah & Cepat
+              Simple & Fast
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
-              Cara Pesan
+              How to Order
             </h2>
           </div>
 
@@ -269,18 +269,18 @@ export default async function HomePage() {
             {[
               {
                 step: "01",
-                title: "Pilih Menu",
-                desc: "Pilih menu favoritmu dan tambah ke keranjang. Stok terbatas!",
+                title: "Choose Your Menu",
+                desc: "Pick your favorites and add them to your cart. Stock is limited!",
               },
               {
                 step: "02",
-                title: "Isi Data & Bayar",
-                desc: "Isi nama, nomor HP, dan bayar via QRIS atau transfer bank.",
+                title: "Fill In Details & Pay",
+                desc: "Enter your name, phone number, and pay via QRIS or bank transfer.",
               },
               {
                 step: "03",
-                title: "Ambil Pesanan",
-                desc: "Tunjukkan kode referensimu saat pengambilan. Selesai!",
+                title: "Pick Up Your Order",
+                desc: "Show your reference code at pickup. Done!",
               },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex flex-col items-center text-center sm:items-start sm:text-left">
@@ -298,7 +298,7 @@ export default async function HomePage() {
               href="/order"
               className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-semibold px-10 py-4 rounded-full text-base transition-all shadow-lg shadow-amber-500/20"
             >
-              Pesan Sekarang
+              Order Now
             </Link>
           </div>
         </div>
@@ -314,8 +314,8 @@ export default async function HomePage() {
             </div>
             <nav className="flex flex-wrap justify-center gap-5 text-sm text-white/50">
               <Link href="/faq" className="hover:text-white/80 transition-colors">FAQ</Link>
-              <Link href="/refund-policy" className="hover:text-white/80 transition-colors">Kebijakan Refund</Link>
-              <Link href="/terms" className="hover:text-white/80 transition-colors">Syarat & Ketentuan</Link>
+              <Link href="/refund-policy" className="hover:text-white/80 transition-colors">Refund Policy</Link>
+              <Link href="/terms" className="hover:text-white/80 transition-colors">Terms & Conditions</Link>
             </nav>
           </div>
           <div className="mt-8 pt-8 border-t border-white/10 text-center text-white/30 text-xs">

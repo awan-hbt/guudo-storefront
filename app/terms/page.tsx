@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Syarat & Ketentuan — Guudo",
+  title: "Terms & Conditions — Guudo",
 };
 
 export default function TermsPage() {
@@ -13,80 +13,78 @@ export default function TermsPage() {
             Guudo
           </Link>
           <span className="text-white/30">/</span>
-          <span className="text-white/60 text-sm">Syarat & Ketentuan</span>
+          <span className="text-white/60 text-sm">Terms & Conditions</span>
         </div>
       </nav>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">Syarat & Ketentuan</h1>
-        <p className="text-stone-400 text-sm mb-8">Terakhir diperbarui: Juni 2025</p>
+        <h1 className="text-3xl font-bold text-stone-900 mb-2">Terms & Conditions</h1>
+        <p className="text-stone-400 text-sm mb-8">Last updated: June 2025</p>
 
         <div className="space-y-6 text-stone-700 text-sm leading-relaxed">
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">1. Penerimaan Syarat</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">1. Acceptance of Terms</h2>
             <p>
-              Dengan menggunakan layanan pemesanan online Guudo di guudo.id, kamu menyetujui syarat
-              dan ketentuan yang tertera di halaman ini.
+              By using Guudo’s online ordering service at guudo.id, you agree to the terms
+              and conditions stated on this page.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">2. Layanan</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">2. Service</h2>
             <p>
-              Guudo menyediakan platform pemesanan makanan online untuk menu yakitori dan rice bowl
-              yang dijual di booth fisik kami. Semua pesanan bersifat pickup — tidak ada layanan
-              delivery.
+              Guudo provides an online food ordering platform for yakitori and rice bowl menus
+              sold at our physical booth. All orders are pickup-only — no delivery service.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">3. Pemesanan & Pembayaran</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">3. Ordering & Payment</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Pesanan dianggap sah setelah pembayaran dikonfirmasi.</li>
-              <li>Harga yang tertera adalah harga final dalam Rupiah (IDR).</li>
-              <li>Stok bersifat terbatas dan dapat berubah secara real-time.</li>
-              <li>Guudo berhak membatalkan pesanan jika stok tidak tersedia setelah pembayaran,
-                dengan mengembalikan dana penuh.</li>
+              <li>An order is considered valid once payment is confirmed.</li>
+              <li>Listed prices are final in Indonesian Rupiah (IDR).</li>
+              <li>Stock is limited and may change in real-time.</li>
+              <li>Guudo reserves the right to cancel an order if stock is unavailable after payment,
+                with a full refund issued.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">4. Data Pribadi</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">4. Personal Data</h2>
             <p>
-              Data yang kamu berikan (nama, nomor HP) hanya digunakan untuk keperluan pemrosesan
-              pesanan dan komunikasi terkait pesananmu. Kami tidak menjual data ke pihak ketiga.
+              The data you provide (name, phone number) is used solely for order processing
+              and order-related communication. We do not sell data to third parties.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">5. Batasan Tanggung Jawab</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">5. Limitation of Liability</h2>
             <p>
-              Guudo tidak bertanggung jawab atas kerugian yang timbul akibat keterlambatan atau
-              kegagalan sistem di luar kendali kami, termasuk gangguan jaringan atau sistem
-              pembayaran pihak ketiga.
+              Guudo is not liable for losses arising from delays or system failures beyond our
+              control, including network outages or third-party payment system issues.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">6. Perubahan Syarat</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">6. Changes to Terms</h2>
             <p>
-              Guudo berhak mengubah syarat dan ketentuan ini sewaktu-waktu. Perubahan akan
-              diinformasikan melalui website ini.
+              Guudo reserves the right to update these terms at any time. Changes will be
+              communicated through this website.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-stone-900 mb-2">7. Hukum yang Berlaku</h2>
+            <h2 className="text-lg font-bold text-stone-900 mb-2">7. Governing Law</h2>
             <p>
-              Syarat ini diatur oleh hukum Republik Indonesia. Setiap sengketa diselesaikan melalui
-              musyawarah terlebih dahulu.
+              These terms are governed by the laws of the Republic of Indonesia. Any disputes
+              will be resolved through deliberation first.
             </p>
           </section>
         </div>
 
         <div className="mt-10">
           <Link href="/" className="text-amber-600 hover:text-amber-700 text-sm font-medium transition-colors">
-            ← Kembali ke Beranda
+            ← Back to Home
           </Link>
         </div>
       </main>
