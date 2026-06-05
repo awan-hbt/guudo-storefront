@@ -466,14 +466,14 @@ export default function OrderPage() {
                               key={item.id}
                               className="bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex"
                             >
-                              <div className="relative w-28 h-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
+                              <div className="w-28 h-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 overflow-hidden flex items-center justify-center">
                                 {item.imageUrl ? (
                                   <Image
                                     src={item.imageUrl}
                                     alt={item.name}
-                                    fill
-                                    className="object-cover"
-                                    sizes="112px"
+                                    width={112}
+                                    height={112}
+                                    className="w-full h-full object-cover"
                                   />
                                 ) : (
                                   <span className="text-3xl select-none">🍢</span>
@@ -520,9 +520,9 @@ export default function OrderPage() {
                               key={item.id}
                               className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 flex items-center gap-3"
                             >
-                              <div className="relative w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center overflow-hidden">
+                              <div className="w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 overflow-hidden flex items-center justify-center">
                                 {item.imageUrl ? (
-                                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="48px" />
+                                  <Image src={item.imageUrl} alt={item.name} width={48} height={48} className="w-full h-full object-cover" />
                                 ) : (
                                   <span className="text-xl select-none">🍢</span>
                                 )}
