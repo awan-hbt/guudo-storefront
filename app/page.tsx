@@ -153,8 +153,11 @@ export default async function HomePage() {
             style={{ fontSize: "clamp(3rem, 10vw, 6rem)", lineHeight: 1 }}>
             Guudo Foods
           </h1>
-          <p className="text-white/55 text-lg sm:text-xl leading-relaxed mb-10 max-w-sm mx-auto">
+          <p className="text-white/55 text-lg sm:text-xl leading-relaxed mb-4 max-w-sm mx-auto">
             Authentic yakitori & rice bowls. Made fresh, sold fast.
+          </p>
+          <p className="text-white/40 text-sm sm:text-base leading-relaxed mb-10 max-w-md mx-auto">
+            Our chef spent 16 years living and cooking in Japan — bringing you real, home-style Japanese food.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
