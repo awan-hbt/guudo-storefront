@@ -777,6 +777,12 @@ export default function OrderPage() {
             </p>
             <p className="text-amber-600 font-bold text-xl mb-6">{formatPrice(totalPrice)}</p>
 
+            {/* WhatsApp notification banner */}
+            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 mb-6 flex items-start gap-2 text-left">
+              <span className="text-lg leading-none mt-0.5">💬</span>
+              <p>You will receive a <span className="font-semibold">WhatsApp message</span> once your order is placed. You can also complete or follow up on this transaction via WhatsApp.</p>
+            </div>
+
             {qrString ? (
               <div className="inline-block bg-white p-4 rounded-2xl border-2 border-stone-100 shadow-sm mb-6">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -832,6 +838,12 @@ export default function OrderPage() {
               Reference Code: <span className="font-bold text-stone-900">{referenceCode}</span>
             </p>
             <p className="text-amber-600 font-bold text-xl mb-6">{formatPrice(totalPrice)}</p>
+
+            {/* WhatsApp notification banner */}
+            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-sm text-green-800 mb-6 flex items-start gap-2 text-left">
+              <span className="text-lg leading-none mt-0.5">💬</span>
+              <p>You will receive a <span className="font-semibold">WhatsApp message</span> once your order is placed. You can also complete or follow up on this transaction via WhatsApp.</p>
+            </div>
 
             {/* Static QRIS image */}
             <div className="inline-block bg-white p-3 rounded-2xl border-2 border-stone-100 shadow-sm mb-3">
