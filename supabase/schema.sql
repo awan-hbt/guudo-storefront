@@ -45,7 +45,25 @@ values
 on conflict (id) do nothing;
 
 -- ============================================================
--- Optional: seed image_url values for existing menu items
+-- POS Addendum
+-- ============================================================
+
+-- 9. Add source column to orders (online vs pos)
+alter table orders
+  add column if not exists source text default 'online';
+
+-- 10. Add cash payment columns for POS cash transactions
+alter table orders
+  add column if not exists cash_tendered integer;
+
+alter table orders
+  add column if not exists change_due integer;
+
+-- 11. Add POS PIN config key (set a value in app_config to enable PIN gate)
+insert into app_config (key, value)
+values ('pos_pin', '')
+on conflict (key) do nothing;
+
 -- Replace the URLs with actual paths from your Supabase Storage
 -- ============================================================
 -- update menu_items set image_url = 'https://<project>.supabase.co/storage/v1/object/public/menu-images/yakitori-chilli-oil.jpg'

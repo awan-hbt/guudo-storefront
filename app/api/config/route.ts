@@ -7,9 +7,15 @@ export async function GET() {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("app_config")
-    .select("value")
-    .eq("key", "ipaymu_enabled")
-    .maybeSingle();
+    .select("key, value")
+    .in("key", ["ipaymu_enabled", "pos_pin"]);
 
-  return NextResponse.json({ ipaymuEnabled: data?.value === "true" });
+  const configMap = Object.fromEntries(
+    (data ?? []).map((row) => [row.key, row.value])
+  );
+
+  return NextResponse.json({
+    ipaymuEnabled: configMap["ipaymu_enabled"] === "true",
+    posPin: configMap["pos_pin"] ?? "",
+  });
 }

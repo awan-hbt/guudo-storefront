@@ -7,6 +7,50 @@ function normalizePhone(phone: string): string {
   return "62" + digits;
 }
 
+export async function notifyAdminPosOrder(params: {
+  referenceCode: string;
+  totalPrice: number;
+  paymentMethod: string;
+  changeDue: number | null;
+  notes: string | null;
+}): Promise<void> {
+  const apiKey = process.env.WATZAP_API_KEY;
+  const accessToken = process.env.WATZAP_ACCESS_TOKEN;
+  const adminPhone = process.env.WATZAP_ADMIN_PHONE;
+  if (!apiKey || !accessToken || !adminPhone) return;
+
+  const payLabel =
+    params.paymentMethod === "qris"
+      ? "QRIS"
+      : params.paymentMethod === "transfer"
+      ? "Transfer"
+      : "Cash";
+
+  let message =
+    `🧾 *POS Order*\n\n` +
+    `Ref: *${params.referenceCode}*\n` +
+    `Total: Rp ${params.totalPrice.toLocaleString("id-ID")}\n` +
+    `Bayar: ${payLabel}`;
+
+  if (params.paymentMethod === "cash" && params.changeDue !== null) {
+    message += `\nKembalian: Rp ${params.changeDue.toLocaleString("id-ID")}`;
+  }
+  if (params.notes) {
+    message += `\nCatatan: ${params.notes}`;
+  }
+
+  await fetch(`${WATZAP_BASE}/waba_send_message`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: apiKey,
+      access_token: accessToken,
+      number_key: adminPhone,
+      message,
+    }),
+  });
+}
+
 export async function notifyAdminReceiptUploaded(params: {
   referenceCode: string;
   name: string;
