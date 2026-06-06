@@ -2,6 +2,8 @@ import { createServiceClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 interface MenuItem {
   id: string;
   name: string;
