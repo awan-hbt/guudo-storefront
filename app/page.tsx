@@ -144,6 +144,17 @@ export default async function HomePage() {
             backgroundSize: "32px 32px",
           }}
         />
+        {/* Logo overlay */}
+        <div className="absolute inset-0 flex items-start justify-center pointer-events-none">
+          <Image
+            src="/asset1.png"
+            alt=""
+            width={1100}
+            height={1100}
+            className="object-contain opacity-[0.07] select-none"
+            priority
+          />
+        </div>
 
         <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
           <p className="text-amber-400 text-xs font-semibold tracking-[0.35em] uppercase mb-5">
