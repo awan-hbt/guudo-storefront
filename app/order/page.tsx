@@ -1007,24 +1007,12 @@ export default function OrderPage() {
                 : "Send Payment Proof"}
             </button>
 
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setPaymentMethod("qris");
-                  refreshQris();
-                }}
-                disabled={refreshingQr}
-                className="w-full bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 disabled:text-stone-500 text-white font-bold py-4 rounded-2xl text-base transition-colors"
-              >
-                {refreshingQr ? "Refreshing QR code..." : "Switch to Dynamic QRIS"}
-              </button>
-              <button
-                onClick={() => setStep("confirmed")}
-                className="w-full text-stone-500 hover:text-stone-800 text-sm py-2 transition-colors"
-              >
-                Upload later →
-              </button>
-            </div>
+            <button
+              onClick={() => setStep("confirmed")}
+              className="w-full text-stone-500 hover:text-stone-800 text-sm py-2 transition-colors"
+            >
+              Upload later →
+            </button>
           </div>
         )}
 
