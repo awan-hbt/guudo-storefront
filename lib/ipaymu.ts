@@ -101,33 +101,79 @@ function isPaidStatus(statusNum: number, statusDesc: string): boolean {
   );
 }
 
+/** Parse iPaymu's /api/v2/transaction response into our status result. */
+function parseTransactionResponse(data: unknown, trxId: string): IpaymuStatusResult {
+  const d = (data as { Data?: Record<string, unknown> } | null)?.Data ?? {};
+  const statusNum = Number(d.Status ?? d.StatusCode);
+  const statusDesc = String(d.StatusDesc ?? d.Status ?? "")
+    .trim()
+    .toLowerCase();
+
+  return {
+    paid: isPaidStatus(statusNum, statusDesc),
+    status: Number.isFinite(statusNum) ? statusNum : undefined,
+    statusDesc: statusDesc || undefined,
+    trxId,
+    raw: data,
+    error: topLevelError(data),
+  };
+}
+
 /**
- * Query iPaymu directly for a transaction's status by transaction id.
+ * Query iPaymu for a transaction's status by transaction id.
+ *
+ * iPaymu enforces an IP allowlist, and only the VPS proxy's IP is whitelisted —
+ * calling iPaymu straight from Vercel returns 406 "invalid IP". So we route the
+ * check through the proxy (which signs + forwards from the allowlisted IP),
+ * mirroring how payment creation works. We only fall back to a direct call when
+ * the proxy isn't configured.
  *
  * Note: for QRIS, the transaction id only exists AFTER the customer pays, so
- * this is only usable once we have a stored `ipaymu_trx_id`. When we don't have
- * one, use `checkIpaymuByReference` instead.
+ * this is only usable once we have a stored `ipaymu_trx_id`.
  */
 export async function checkIpaymuTransaction(
   trxId: string
 ): Promise<IpaymuStatusResult> {
+  const proxyUrl = process.env.IPAYMU_PROXY_URL?.trim();
+  const proxySecret = process.env.PROXY_SECRET?.trim();
+
+  if (proxyUrl && proxySecret) {
+    try {
+      const res = await fetch(`${proxyUrl}/check-transaction`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-proxy-secret": proxySecret,
+        },
+        body: JSON.stringify({ transactionId: trxId }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        return {
+          paid: false,
+          trxId,
+          raw: data,
+          error: `Proxy /check-transaction HTTP ${res.status}`,
+        };
+      }
+      return parseTransactionResponse(data, trxId);
+    } catch (err) {
+      return {
+        paid: false,
+        trxId,
+        raw: null,
+        error: `Proxy /check-transaction failed: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      };
+    }
+  }
+
+  // Fallback: call iPaymu directly (works only if this server's IP is
+  // allowlisted in iPaymu — Vercel IPs are not, hence the proxy above).
   try {
     const data = await ipaymuPost("/api/v2/transaction", { transactionId: trxId });
-    const d = (data as { Data?: Record<string, unknown> } | null)?.Data ?? {};
-
-    const statusNum = Number(d.Status ?? d.StatusCode);
-    const statusDesc = String(d.StatusDesc ?? d.Status ?? "")
-      .trim()
-      .toLowerCase();
-
-    return {
-      paid: isPaidStatus(statusNum, statusDesc),
-      status: Number.isFinite(statusNum) ? statusNum : undefined,
-      statusDesc: statusDesc || undefined,
-      trxId,
-      raw: data,
-      error: topLevelError(data),
-    };
+    return parseTransactionResponse(data, trxId);
   } catch (err) {
     return {
       paid: false,
