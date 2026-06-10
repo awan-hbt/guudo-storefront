@@ -102,8 +102,11 @@ export async function POST(req: NextRequest) {
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://guudo.id").trim();
 
   let qrisUrl: string | null = null;
+  // Debug trail so iPaymu failures are visible in the Network tab + server logs.
+  let proxyDebug: Record<string, unknown> = { attempted: false };
 
   if (ipaymuEnabled && proxyUrl && proxySecret) {
+    proxyDebug = { attempted: true, proxyUrl, referenceCode };
     try {
       const proxyRes = await fetch(`${proxyUrl}/create-payment`, {
         method: "POST",
@@ -123,7 +126,14 @@ export async function POST(req: NextRequest) {
           cancelUrl: baseUrl,
         }),
       });
-      const ipaymuData = await proxyRes.json();
+      const ipaymuData = await proxyRes.json().catch(() => null);
+      proxyDebug = {
+        ...proxyDebug,
+        httpStatus: proxyRes.status,
+        ok: proxyRes.ok,
+        response: ipaymuData,
+      };
+      console.log("[iPaymu proxy] order create →", JSON.stringify(proxyDebug));
       if (ipaymuData?.Data) {
         const trxId = ipaymuData.Data.TransactionId
           ? String(ipaymuData.Data.TransactionId)
@@ -137,12 +147,22 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (err) {
-      console.error("[iPaymu proxy error]", err);
+      const message = err instanceof Error ? err.message : String(err);
+      proxyDebug = { ...proxyDebug, error: message };
+      console.error("[iPaymu proxy error]", message);
     }
+  } else {
+    proxyDebug = {
+      attempted: false,
+      reason: !ipaymuEnabled
+        ? "ipaymuEnabled is false (QRIS not selected, or ipaymu_enabled config is off)"
+        : "IPAYMU_PROXY_URL or PROXY_SECRET not set in environment",
+    };
+    console.warn("[iPaymu] skipped:", proxyDebug.reason);
   }
 
   return NextResponse.json(
-    { success: true, referenceCode, qrString: qrisUrl },
+    { success: true, referenceCode, qrString: qrisUrl, proxyDebug },
     { status: 201 }
   );
 }

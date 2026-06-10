@@ -107,6 +107,8 @@ export default function OrderPage() {
   const [referenceCode, setReferenceCode] = useState("");
   const [qrString, setQrString] = useState<string | null>(null);
   const [orderError, setOrderError] = useState("");
+  const [qrRefreshError, setQrRefreshError] = useState("");
+  const [refreshingQr, setRefreshingQr] = useState(false);
   // totalPriceOverride is set when restoring from sessionStorage (cart is empty after refresh)
   const [totalPriceOverride, setTotalPriceOverride] = useState<number | null>(null);
 
@@ -139,6 +141,14 @@ export default function OrderPage() {
     } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (step !== "payment" || paymentMethod !== "qris" || !referenceCode || qrString) {
+      return;
+    }
+
+    refreshQris();
+  }, [step, paymentMethod, referenceCode, qrString]);
 
   // ── Load menu + config ──
   useEffect(() => {
@@ -239,6 +249,71 @@ export default function OrderPage() {
   }, []);
 
   // ── Place order ──
+  async function refreshQris() {
+    if (!referenceCode) return;
+
+    setRefreshingQr(true);
+    setQrRefreshError("");
+
+    try {
+      const res = await fetch("/api/orders/qris", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referenceCode }),
+      });
+
+      const data = await res.json();
+      if (data.proxyDebug) console.log("[iPaymu] qris proxyDebug:", data.proxyDebug);
+      if (!res.ok) {
+        const detail = data.detail ? ` (${data.detail})` : "";
+        throw new Error((data.error ?? "Failed to generate QR code") + detail);
+      }
+
+      setQrString(data.qrString ?? null);
+      try {
+        sessionStorage.setItem(
+          "guudo_payment",
+          JSON.stringify({
+            step: "payment",
+            referenceCode,
+            qrString: data.qrString ?? null,
+            totalPrice,
+            paymentMethod,
+            name: name.trim(),
+            phone: phone.trim(),
+          })
+        );
+      } catch {}
+
+      if (data.qrString) {
+        startQrisPolling(referenceCode);
+      }
+    } catch (err) {
+      // Dynamic QR (iPaymu proxy) is unavailable — fall back to the static QRIS
+      // screen so the customer is never stranded on a broken payment step.
+      console.error("[QRIS] dynamic QR failed, falling back to static", err);
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      setQrRefreshError("");
+      setPaymentMethod("transfer");
+      try {
+        sessionStorage.setItem(
+          "guudo_payment",
+          JSON.stringify({
+            step: "payment",
+            referenceCode,
+            qrString: null,
+            totalPrice,
+            paymentMethod: "transfer",
+            name: name.trim(),
+            phone: phone.trim(),
+          })
+        );
+      } catch {}
+    } finally {
+      setRefreshingQr(false);
+    }
+  }
+
   async function placeOrder() {
     setFormError("");
     if (!name.trim()) { setFormError("Please enter your name."); return; }
@@ -268,6 +343,7 @@ export default function OrderPage() {
       });
 
       const data = await res.json();
+      if (data.proxyDebug) console.log("[iPaymu] order proxyDebug:", data.proxyDebug);
 
       if (!res.ok) {
         setOrderError(data.error ?? "Failed to place order. Please try again.");
@@ -305,6 +381,10 @@ export default function OrderPage() {
 
   // ── QRIS polling ──
   function startQrisPolling(refCode: string) {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
     qrisStartRef.current = Date.now();
     setQrisStatus("waiting");
 
@@ -743,9 +823,9 @@ export default function OrderPage() {
                     className="mt-0.5 accent-amber-500"
                   />
                   <div>
-                    <p className="font-semibold text-stone-900 text-sm">QRIS</p>
+                    <p className="font-semibold text-stone-900 text-sm">Bank transfer</p>
                     <p className="text-stone-500 text-xs mt-0.5">
-                      Scan QRIS kami, lalu upload bukti bayar.
+                      Transfer manually and upload payment proof.
                     </p>
                   </div>
                 </label>
@@ -796,7 +876,13 @@ export default function OrderPage() {
               </div>
             ) : (
               <div className="bg-amber-50 text-amber-700 rounded-xl px-4 py-3 text-sm mb-6">
-                QR Code not available. Please use bank transfer.
+                {refreshingQr ? "Generating QR code..." : "QR Code not available. Please use bank transfer."}
+              </div>
+            )}
+
+            {qrRefreshError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">
+                {qrRefreshError}
               </div>
             )}
 
@@ -921,12 +1007,24 @@ export default function OrderPage() {
                 : "Send Payment Proof"}
             </button>
 
-            <button
-              onClick={() => setStep("confirmed")}
-              className="w-full text-stone-500 hover:text-stone-800 text-sm py-2 transition-colors"
-            >
-              Upload later →
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setPaymentMethod("qris");
+                  refreshQris();
+                }}
+                disabled={refreshingQr}
+                className="w-full bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 disabled:text-stone-500 text-white font-bold py-4 rounded-2xl text-base transition-colors"
+              >
+                {refreshingQr ? "Refreshing QR code..." : "Switch to Dynamic QRIS"}
+              </button>
+              <button
+                onClick={() => setStep("confirmed")}
+                className="w-full text-stone-500 hover:text-stone-800 text-sm py-2 transition-colors"
+              >
+                Upload later →
+              </button>
+            </div>
           </div>
         )}
 
