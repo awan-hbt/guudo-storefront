@@ -84,10 +84,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const qrisUrl = ipaymuData.Data.QrString ?? null;
-    const trxId = ipaymuData.Data.TransactionId
-      ? String(ipaymuData.Data.TransactionId)
-      : null;
+    const d = ipaymuData.Data;
+    const qrisUrl = d.QrString ?? null;
+    const rawTrx = d.TransactionId ?? d.transactionId ?? d.TrxId ?? d.trx_id ?? null;
+    const trxId = rawTrx != null ? String(rawTrx) : null;
 
     if (trxId) {
       await supabase

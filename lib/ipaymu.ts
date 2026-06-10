@@ -2,9 +2,30 @@ import crypto from "node:crypto";
 
 export interface IpaymuStatusResult {
   paid: boolean;
+  /** iPaymu numeric transaction status (Data.Status), if available. */
+  status?: number;
+  /** Human-readable status from iPaymu (Data.StatusDesc), if available. */
+  statusDesc?: string;
   raw: unknown;
   error?: string;
 }
+
+/**
+ * iPaymu transaction statuses considered "paid".
+ *   1 => Berhasil (success)
+ *   6 => Berhasil - Unsettled (paid, awaiting settlement) — common for QRIS!
+ *   7 => Escrow (paid, held)
+ * See ipaymu-memo.md → "Data->Status: 1 atau 6 atau 7".
+ */
+const PAID_STATUS_CODES = [1, 6, 7];
+const PAID_STATUS_WORDS = [
+  "berhasil",
+  "success",
+  "paid",
+  "settlement",
+  "berhasil - unsettled",
+  "escrow",
+];
 
 /**
  * Query iPaymu directly for a transaction's status using the v2 signed API.
@@ -63,17 +84,35 @@ export async function checkIpaymuTransaction(
 
     const data = await res.json().catch(() => null);
     const d = (data as { Data?: Record<string, unknown> } | null)?.Data ?? {};
-    const statusStr = String(d.Status ?? d.StatusDesc ?? "").toLowerCase();
-    const statusCode = d.StatusCode ?? d.Status;
+
+    // iPaymu returns Data.Status as a number (e.g. 1, 6, 7). Some flows also
+    // expose StatusCode / StatusDesc — handle all of them defensively.
+    const statusNum = Number(d.Status ?? d.StatusCode);
+    const statusDesc = String(d.StatusDesc ?? d.Status ?? "")
+      .trim()
+      .toLowerCase();
 
     const paid =
-      statusStr === "berhasil" ||
-      statusStr === "success" ||
-      statusStr === "paid" ||
-      statusCode === 1 ||
-      statusCode === "1";
+      (Number.isFinite(statusNum) && PAID_STATUS_CODES.includes(statusNum)) ||
+      PAID_STATUS_WORDS.includes(statusDesc);
 
-    return { paid, raw: data };
+    // If the top-level Status isn't 200, the request itself failed (e.g. 401
+    // unauthorized signature). Surface that as an error so it's visible.
+    const topStatus = (data as { Status?: number } | null)?.Status;
+    const error =
+      topStatus && topStatus !== 200
+        ? `iPaymu API returned Status ${topStatus}: ${
+            (data as { Message?: string } | null)?.Message ?? "unknown"
+          }`
+        : undefined;
+
+    return {
+      paid,
+      status: Number.isFinite(statusNum) ? statusNum : undefined,
+      statusDesc: statusDesc || undefined,
+      raw: data,
+      error,
+    };
   } catch (err) {
     return {
       paid: false,

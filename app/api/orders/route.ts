@@ -135,10 +135,11 @@ export async function POST(req: NextRequest) {
       };
       console.log("[iPaymu proxy] order create →", JSON.stringify(proxyDebug));
       if (ipaymuData?.Data) {
-        const trxId = ipaymuData.Data.TransactionId
-          ? String(ipaymuData.Data.TransactionId)
-          : null;
-        qrisUrl = ipaymuData.Data.QrString ?? null;
+        const d = ipaymuData.Data;
+        const rawTrx =
+          d.TransactionId ?? d.transactionId ?? d.TrxId ?? d.trx_id ?? null;
+        const trxId = rawTrx != null ? String(rawTrx) : null;
+        qrisUrl = d.QrString ?? null;
         if (trxId) {
           await supabase
             .from("orders")
