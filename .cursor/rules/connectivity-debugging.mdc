@@ -1,0 +1,32 @@
+---
+description: Lessons for diagnosing connectivity/proxy issues (esp. iPaymu)
+alwaysApply: true
+---
+
+# Diagnosing connectivity failures — don't assume "server down"
+
+When a configured `host:port` is unreachable but the host responds to ping,
+**question the URL/port itself before concluding the service is down or
+firewalled.** A wrong port in config is far more common than a dead server.
+
+## What went wrong once (learn from it)
+
+`IPAYMU_PROXY_URL` was set to `http://203.194.115.32:3000`. Port 3000 was
+unreachable, so it was wrongly diagnosed as "VPS proxy down / firewall blocking
+the IP." The real fix was removing `:3000` — the proxy is served on **port 80**
+(`http://203.194.115.32`). It worked immediately, in prod and local.
+
+## Checklist before blaming the server/firewall
+
+- Test the **other common ports** (80, 443) when the configured port fails —
+  not just the one in the config.
+- Try the bare host (`http://HOST`) and `https://HOST` before assuming the
+  endpoint is dead.
+- Ping success + TCP-connect failure on one port = that port is closed/wrong,
+  NOT proof the whole service is down.
+- Treat the configured URL as a suspect, not ground truth.
+
+## iPaymu proxy fact for this repo
+
+The iPaymu VPS proxy is reached at `http://203.194.115.32` (port 80, no
+suffix). Keep `IPAYMU_PROXY_URL` without `:3000`.
