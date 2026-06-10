@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
-import { checkIpaymuTransaction } from "@/lib/ipaymu";
+import {
+  checkIpaymuTransaction,
+  checkIpaymuByReference,
+  type IpaymuStatusResult,
+} from "@/lib/ipaymu";
 
 export async function GET(req: NextRequest) {
   const referenceCode = req.nextUrl.searchParams
@@ -32,21 +36,41 @@ export async function GET(req: NextRequest) {
 
   let paymentStatus = data.payment_status ?? "pending";
   const trxId = data.ipaymu_trx_id ? String(data.ipaymu_trx_id) : null;
-  let ipaymuCheck: Awaited<ReturnType<typeof checkIpaymuTransaction>> | null = null;
+  let ipaymuCheck: IpaymuStatusResult | null = null;
+  let checkedVia: "trxId" | "reference" | null = null;
 
   // Webhook callbacks aren't reliably wired up, so when an order is still
-  // pending and has an iPaymu transaction id, ask iPaymu directly and
-  // self-heal the order to "paid".
-  if (paymentStatus !== "paid" && trxId) {
-    ipaymuCheck = await checkIpaymuTransaction(trxId);
-    if (ipaymuCheck.paid) {
+  // pending we ask iPaymu directly and self-heal the order to "paid".
+  //
+  // For QRIS there's usually no transaction id until the customer pays, so the
+  // reliable path is to look the payment up by our reference (the iPaymu "Ref
+  // ID"). We try the fast trx-id check first when we happen to have one.
+  if (paymentStatus !== "paid") {
+    if (trxId) {
+      ipaymuCheck = await checkIpaymuTransaction(trxId);
+      checkedVia = "trxId";
+    }
+
+    if (!ipaymuCheck?.paid) {
+      const byRef = await checkIpaymuByReference(referenceCode);
+      // Prefer the reference result if it's conclusive or the trx check failed.
+      if (byRef.paid || !ipaymuCheck) {
+        ipaymuCheck = byRef;
+        checkedVia = "reference";
+      }
+    }
+
+    if (ipaymuCheck?.paid) {
       paymentStatus = "paid";
+      const update: Record<string, unknown> = { payment_status: "paid" };
+      // Backfill the real transaction id once we learn it from the lookup.
+      if (!trxId && ipaymuCheck.trxId) update.ipaymu_trx_id = ipaymuCheck.trxId;
       await supabase
         .from("orders")
-        .update({ payment_status: "paid" })
+        .update(update)
         .eq("reference_code", referenceCode);
-      console.log(`[status] iPaymu confirmed paid for ${referenceCode}`);
-    } else if (ipaymuCheck.error) {
+      console.log(`[status] iPaymu confirmed paid for ${referenceCode} (via ${checkedVia})`);
+    } else if (ipaymuCheck?.error) {
       console.error("[status] iPaymu check error:", ipaymuCheck.error);
     }
   }
@@ -58,6 +82,7 @@ export async function GET(req: NextRequest) {
         referenceCode,
         storedTrxId: trxId,
         hasTrxId: Boolean(trxId),
+        checkedVia,
         envConfigured: {
           IPAYMU_VA: Boolean(process.env.IPAYMU_VA),
           IPAYMU_API_KEY: Boolean(process.env.IPAYMU_API_KEY),
