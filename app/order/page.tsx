@@ -823,7 +823,7 @@ export default function OrderPage() {
                     className="mt-0.5 accent-amber-500"
                   />
                   <div>
-                    <p className="font-semibold text-stone-900 text-sm">Bank transfer</p>
+                    <p className="font-semibold text-stone-900 text-sm">QRIS</p>
                     <p className="text-stone-500 text-xs mt-0.5">
                       Transfer manually and upload payment proof.
                     </p>
