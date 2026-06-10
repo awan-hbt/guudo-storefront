@@ -825,7 +825,7 @@ export default function OrderPage() {
                   <div>
                     <p className="font-semibold text-stone-900 text-sm">QRIS</p>
                     <p className="text-stone-500 text-xs mt-0.5">
-                      Transfer manually and upload payment proof.
+                      Scan the QRIS code and upload payment proof.
                     </p>
                   </div>
                 </label>
