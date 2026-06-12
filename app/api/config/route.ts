@@ -8,7 +8,7 @@ export async function GET() {
   const { data } = await supabase
     .from("app_config")
     .select("key, value")
-    .in("key", ["ipaymu_enabled", "pos_pin"]);
+    .in("key", ["ipaymu_enabled"]);
 
   const configMap = Object.fromEntries(
     (data ?? []).map((row) => [row.key, row.value])
@@ -16,6 +16,5 @@ export async function GET() {
 
   return NextResponse.json({
     ipaymuEnabled: configMap["ipaymu_enabled"] === "true",
-    posPin: configMap["pos_pin"] ?? "",
   });
 }

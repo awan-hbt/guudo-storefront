@@ -1,7 +1,7 @@
 # Guudo Storefront Architecture Diagram
 
 ## Overview
-Guudo is a Japanese street food storefront built with Next.js, featuring both online ordering and POS (Point of Sale) capabilities with real-time stock management.
+Guudo is a Japanese street food storefront built with Next.js, featuring online ordering with real-time stock management.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -17,25 +17,26 @@ Guudo is a Japanese street food storefront built with Next.js, featuring both on
             │                │   API      │                    │
             └───────┬────────┘           └──────────┬───────────┘
                     │                               │
-    ┌───────────────┼───────────────┐               │
-    │               │               │               │
-┌───▼────┐   ┌─────▼─────┐   ┌─────▼─────┐   ┌─────▼─────┐
-│ Landing│   │  Order    │   │    POS    │   │ Database  │
-│  Page  │   │  Page     │   │   Page    │   │           │
-│  (/)   │   │ (/order)  │   │  (/pos)   │   │ PostgreSQL│
-└────────┘   └─────┬─────┘   └─────┬─────┘   └─────┬─────┘
-                    │               │               │
-                    └───────┬───────┘               │
-                            │                       │
-                    ┌───────▼───────────────────────┴───────┐
-                    │           API Routes                    │
-                    │  /api/orders, /api/stock, /api/config   │
-                    └───────┬───────────────────────┬───────┘
-                            │                       │
-                    ┌───────▼───────┐       ┌───────▼───────┐
-                    │  Watzap API   │       │  iPaymu API   │
-                    │  (WhatsApp)   │       │  (QRIS Pay)   │
-                    └───────────────┘       └───────────────┘
+        ┌───────────┴───────────┐                   │
+        │                       │                   │
+┌───────▼────┐         ┌────────▼────┐   ┌──────────▼──────────┐
+│  Landing   │         │   Order     │   │     Database        │
+│   Page     │         │   Page      │   │                     │
+│   (/)      │         │  (/order)   │   │    PostgreSQL       │
+└────────────┘         └────────┬────┘   └──────────┬──────────┘
+                                │                   │
+                                └─────────┬─────────┘
+                                          │
+                              ┌───────────▼──────────────────┐
+                              │          API Routes           │
+                              │  /api/orders, /api/stock,     │
+                              │  /api/config                  │
+                              └───────────┬──────────┬────────┘
+                                          │          │
+                              ┌───────────▼──┐  ┌────▼──────────┐
+                              │  Watzap API  │  │  iPaymu API   │
+                              │  (WhatsApp)  │  │  (QRIS Pay)   │
+                              └──────────────┘  └───────────────┘
 ```
 
 ## Technology Stack
@@ -70,11 +71,9 @@ guudo-storefront/
 │   │   │   ├── receipt/           # Receipt upload
 │   │   │   ├── status/            # Order status check
 │   │   │   └── route.ts           # Order creation
-│   │   ├── pos/                # POS-specific endpoints
 │   │   └── stock/              # Stock & menu endpoint
 │   ├── faq/                   # FAQ page
 │   ├── order/                 # Online ordering page
-│   ├── pos/                   # Point of Sale page
 │   ├── refund-policy/         # Refund policy page
 │   ├── terms/                 # Terms & conditions page
 │   ├── globals.css            # Global styles
@@ -116,9 +115,6 @@ guudo-storefront/
 - receipt_url (text)
 - ipaymu_trx_id (text)
 - memo (text)
-- source (text: 'online' | 'pos')
-- cash_tendered (integer)
-- change_due (integer)
 - created_at (timestamp)
 
 **order_items**
@@ -177,29 +173,6 @@ Customer
               └─> Send WhatsApp: notifyCustomerConfirmed
 ```
 
-### POS Flow
-
-```
-Staff
-  │
-  └─> POS Page (/pos)
-      ├─> PIN Authentication (if configured)
-      ├─> Select Items
-      ├─> Enter Customer Details
-      ├─> Select Payment Method
-      │   ├─> Cash: Enter amount tendered
-      │   ├─> QRIS: Generate QR code
-      │   └─> Transfer: Upload receipt
-      └─> Submit Order
-          │
-          └─> POST /api/pos/orders
-              ├─> Generate Reference Code
-              ├─> Call RPC: place_order
-              ├─> Insert Order (source: 'pos')
-              ├─> Insert Order Items
-              └─> Send WhatsApp: notifyAdminPosOrder
-```
-
 ### Stock Management
 
 ```
@@ -221,7 +194,7 @@ Returns menu items with current stock levels
 
 ### GET /api/config
 Returns app configuration
-- Response: `{ ipaymuEnabled: boolean, posPin: string }`
+- Response: `{ ipaymuEnabled: boolean }`
 
 ### POST /api/orders
 Creates a new online order
@@ -267,11 +240,7 @@ Generates QR code image for reference code
    - Includes: name, reference code, total price
 
 ### Admin Notifications
-1. **POS Order**: Direct message
-   - Sent when POS order is created
-   - Includes: reference code, total, payment method, change due, notes
-
-2. **Receipt Uploaded**: Direct message
+1. **Receipt Uploaded**: Direct message
    - Sent when customer uploads transfer receipt
    - Includes: reference code, name, phone, total, location, receipt URL
 
@@ -294,9 +263,9 @@ Optional (for WhatsApp):
 
 ## Key Features
 
-1. **Dual Ordering Channels**: Online web ordering and in-store POS
+1. **Online Ordering**: Customer-facing web ordering
 2. **Real-time Stock Management**: Atomic stock deduction via PostgreSQL RPC
-3. **Multiple Payment Methods**: QRIS (iPaymu), Bank Transfer, Cash (POS)
+3. **Multiple Payment Methods**: QRIS (iPaymu), Bank Transfer
 4. **WhatsApp Integration**: Automated customer and admin notifications
 5. **Receipt Upload**: Customers can upload transfer receipts
 6. **Reference Code System**: Unique GD-XXXX codes for order tracking
@@ -307,6 +276,5 @@ Optional (for WhatsApp):
 
 1. **Service Role Key**: Used server-side for database operations (bypasses RLS)
 2. **Proxy Secret**: Validates iPaymu webhook callbacks
-3. **POS PIN**: Optional PIN protection for POS interface
-4. **Stock Validation**: Atomic transaction prevents overselling
-5. **Input Validation**: All API endpoints validate required fields
+3. **Stock Validation**: Atomic transaction prevents overselling
+4. **Input Validation**: All API endpoints validate required fields
