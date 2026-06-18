@@ -93,6 +93,7 @@ export default async function HomePage() {
   const items = await getMenuItems();
   const mainItems = items.filter((i) => i.category === "main");
   const addonItems = items.filter((i) => i.category === "addon");
+  const frozenItems = items.filter((i) => i.category === "frozen");
 
   return (
     <div className="min-h-screen" style={{ background: "#faf8f3" }}>
@@ -227,9 +228,22 @@ export default async function HomePage() {
               <h3 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-5">
                 Add-ons
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-12">
                 {addonItems.map((item) => (
                   <AddonCard key={item.id} item={item} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {frozenItems.length > 0 && (
+            <>
+              <h3 className="text-xs font-bold text-sky-600 tracking-[0.25em] uppercase mb-5">
+                Frozen
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {frozenItems.map((item) => (
+                  <MenuItemCard key={item.id} item={item} />
                 ))}
               </div>
             </>

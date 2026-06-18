@@ -12,7 +12,7 @@ interface MenuItem {
   name: string;
   description: string | null;
   price: number;
-  category: "main" | "addon";
+  category: "main" | "addon" | "frozen";
   unit: string;
   imageUrl: string | null;
   stockAvailable: number;
@@ -466,6 +466,7 @@ export default function OrderPage() {
 
   const mainItems = menuItems.filter((i) => i.category === "main");
   const addonItems = menuItems.filter((i) => i.category === "addon");
+  const frozenItems = menuItems.filter((i) => i.category === "frozen");
 
 
 
@@ -590,7 +591,7 @@ export default function OrderPage() {
                     )}
 
                     {addonItems.length > 0 && (
-                      <section>
+                      <section className={frozenItems.length > 0 ? "mb-10" : ""}>
                         <h2 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-4">
                           Add-ons
                         </h2>
@@ -623,6 +624,60 @@ export default function OrderPage() {
                                 onRemove={() => removeFromCart(item.id)}
                                 disabled={item.stockAvailable <= 0 || (cart[item.id] ?? 0) >= item.stockAvailable}
                               />
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {frozenItems.length > 0 && (
+                      <section>
+                        <h2 className="text-xs font-bold text-sky-600 tracking-[0.25em] uppercase mb-4">
+                          Frozen
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {frozenItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex"
+                            >
+                              <div className="relative w-28 flex-shrink-0 bg-gradient-to-br from-sky-900 to-stone-800 flex items-center justify-center">
+                                {item.imageUrl ? (
+                                  <Image
+                                    src={item.imageUrl}
+                                    alt={item.name}
+                                    fill
+                                    className="object-cover"
+                                    sizes="112px"
+                                  />
+                                ) : (
+                                  <span className="text-3xl select-none">🧊</span>
+                                )}
+                              </div>
+                              <div className="p-4 flex flex-col flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                  <h3 className="font-semibold text-stone-900 text-sm leading-snug">
+                                    {item.name}
+                                  </h3>
+                                  <StockBadge stock={item.stockAvailable} />
+                                </div>
+                                {item.description && (
+                                  <p className="text-stone-400 text-xs leading-relaxed mb-3 line-clamp-2">
+                                    {item.description}
+                                  </p>
+                                )}
+                                <div className="mt-auto flex items-center justify-between gap-2">
+                                  <span className="font-bold text-sky-600 text-sm">
+                                    {formatPrice(item.price)}
+                                  </span>
+                                  <QtyControl
+                                    qty={cart[item.id] ?? 0}
+                                    onAdd={() => addToCart(item.id)}
+                                    onRemove={() => removeFromCart(item.id)}
+                                    disabled={item.stockAvailable <= 0 || (cart[item.id] ?? 0) >= item.stockAvailable}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
