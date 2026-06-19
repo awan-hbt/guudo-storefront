@@ -33,7 +33,7 @@ create table menu_items (
   name            text not null,
   description     text,
   price           int  not null,          -- IDR, whole number
-  category        text not null check (category in ('main', 'addon')),
+  category        text not null check (category in ('main', 'addon', 'frozen', 'drinks')),
   unit            text not null default 'porsi',
   stock_group_id  text references stock_groups(id),
   stock_available int,                    -- null when managed via stock_group

@@ -12,7 +12,7 @@ interface MenuItem {
   name: string;
   description: string | null;
   price: number;
-  category: "main" | "addon" | "frozen";
+  category: "main" | "addon" | "frozen" | "drinks";
   unit: string;
   imageUrl: string | null;
   stockAvailable: number;
@@ -467,6 +467,7 @@ export default function OrderPage() {
   const mainItems = menuItems.filter((i) => i.category === "main");
   const addonItems = menuItems.filter((i) => i.category === "addon");
   const frozenItems = menuItems.filter((i) => i.category === "frozen");
+  const drinksItems = menuItems.filter((i) => i.category === "drinks");
 
 
 
@@ -631,7 +632,7 @@ export default function OrderPage() {
                     )}
 
                     {frozenItems.length > 0 && (
-                      <section>
+                      <section className={drinksItems.length > 0 ? "mb-10" : ""}>
                         <h2 className="text-xs font-bold text-sky-600 tracking-[0.25em] uppercase mb-4">
                           Frozen
                         </h2>
@@ -678,6 +679,46 @@ export default function OrderPage() {
                                   />
                                 </div>
                               </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {drinksItems.length > 0 && (
+                      <section>
+                        <h2 className="text-xs font-bold text-violet-600 tracking-[0.25em] uppercase mb-4">
+                          Drinks
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {drinksItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="bg-white rounded-xl border border-stone-100 shadow-sm p-3 flex items-center gap-3"
+                            >
+                              <div className="relative w-12 h-12 rounded-lg flex-shrink-0 bg-gradient-to-br from-violet-900 to-stone-800 flex items-center justify-center overflow-hidden">
+                                {item.imageUrl ? (
+                                  <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="48px" />
+                                ) : (
+                                  <span className="text-xl select-none">🥤</span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1 mb-0.5">
+                                  <p className="font-medium text-stone-900 text-sm truncate">{item.name}</p>
+                                  <StockBadge stock={item.stockAvailable} />
+                                </div>
+                                <p className="text-violet-600 text-sm font-bold">
+                                  {formatPrice(item.price)}
+                                  <span className="text-stone-400 font-normal text-xs">/{item.unit}</span>
+                                </p>
+                              </div>
+                              <QtyControl
+                                qty={cart[item.id] ?? 0}
+                                onAdd={() => addToCart(item.id)}
+                                onRemove={() => removeFromCart(item.id)}
+                                disabled={item.stockAvailable <= 0 || (cart[item.id] ?? 0) >= item.stockAvailable}
+                              />
                             </div>
                           ))}
                         </div>
