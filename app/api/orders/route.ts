@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
-import { notifyCustomerOrderReceived } from "@/lib/watzap";
+import { notifyCustomerOrderReceived } from "@/lib/whatsapp";
 
 interface OrderItemInput {
   menuItemId: string;

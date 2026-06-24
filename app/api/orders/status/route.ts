@@ -5,6 +5,10 @@ import {
   checkIpaymuByReference,
   type IpaymuStatusResult,
 } from "@/lib/ipaymu";
+import {
+  isAlreadyPaid,
+  notifyPaymentConfirmedOnce,
+} from "@/lib/whatsapp-idempotency";
 
 export async function GET(req: NextRequest) {
   const referenceCode = req.nextUrl.searchParams
@@ -22,7 +26,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("orders")
-    .select("payment_status, ipaymu_trx_id")
+    .select("payment_status, ipaymu_trx_id, phone, name, total_price, reference_code")
     .eq("reference_code", referenceCode)
     .maybeSingle();
 
@@ -61,6 +65,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (ipaymuCheck?.paid) {
+      const wasPending = !isAlreadyPaid(paymentStatus);
       paymentStatus = "paid";
       const update: Record<string, unknown> = { payment_status: "paid" };
       // Backfill the real transaction id once we learn it from the lookup.
@@ -70,6 +75,15 @@ export async function GET(req: NextRequest) {
         .update(update)
         .eq("reference_code", referenceCode);
       console.log(`[status] iPaymu confirmed paid for ${referenceCode} (via ${checkedVia})`);
+
+      if (wasPending) {
+        notifyPaymentConfirmedOnce(supabase, {
+          phone: data.phone,
+          name: data.name,
+          referenceCode: data.reference_code,
+          totalPrice: data.total_price,
+        }).catch(() => {});
+      }
     } else if (ipaymuCheck?.error) {
       console.error("[status] iPaymu check error:", ipaymuCheck.error);
     }

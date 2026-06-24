@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
+import {
+  isAlreadyPaid,
+  notifyPaymentConfirmedOnce,
+} from "@/lib/whatsapp-idempotency";
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("x-proxy-secret");
@@ -9,12 +13,10 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  // Log the full payload so we can confirm the webhook is arriving and inspect its shape.
   console.log("[payment-callback] received:", JSON.stringify(body));
 
   const { reference_id, status, status_code, trx_id } = body;
 
-  // iPaymu sends status 'berhasil' or status_code '1' for successful payments
   const isPaid =
     status === "berhasil" || status_code === "1" || status_code === 1;
 
@@ -30,7 +32,37 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Primary match: our own reference code (what we sent as referenceId).
+  let order: {
+    reference_code: string;
+    phone: string;
+    name: string;
+    total_price: number;
+    payment_status: string | null;
+  } | null = null;
+
+  if (reference_id) {
+    const { data } = await supabase
+      .from("orders")
+      .select("reference_code, phone, name, total_price, payment_status")
+      .eq("reference_code", String(reference_id))
+      .maybeSingle();
+    order = data;
+  } else if (trx_id) {
+    const { data } = await supabase
+      .from("orders")
+      .select("reference_code, phone, name, total_price, payment_status")
+      .eq("ipaymu_trx_id", String(trx_id))
+      .maybeSingle();
+    order = data;
+  }
+
+  if (order && isAlreadyPaid(order.payment_status)) {
+    console.log(
+      `[payment-callback] already paid — skip notify ref=${order.reference_code}`
+    );
+    return NextResponse.json({ ok: true });
+  }
+
   let matched = 0;
   if (reference_id) {
     const { error, count } = await supabase
@@ -44,7 +76,6 @@ export async function POST(req: NextRequest) {
     matched = count ?? 0;
   }
 
-  // Fallback: match on the stored iPaymu transaction id if reference_code didn't hit.
   if (matched === 0 && trx_id) {
     const { error, count } = await supabase
       .from("orders")
@@ -55,6 +86,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
     }
     matched = count ?? 0;
+
+    if (matched > 0 && !order) {
+      const { data } = await supabase
+        .from("orders")
+        .select("reference_code, phone, name, total_price, payment_status")
+        .eq("ipaymu_trx_id", String(trx_id))
+        .maybeSingle();
+      order = data;
+    }
   }
 
   if (matched === 0) {
@@ -65,6 +105,15 @@ export async function POST(req: NextRequest) {
     console.log(
       `[payment-callback] marked paid (rows=${matched}) reference_id=${reference_id} trx_id=${trx_id}`
     );
+
+    if (order) {
+      notifyPaymentConfirmedOnce(supabase, {
+        phone: order.phone,
+        name: order.name,
+        referenceCode: order.reference_code,
+        totalPrice: order.total_price,
+      }).catch(() => {});
+    }
   }
 
   return NextResponse.json({ ok: true });

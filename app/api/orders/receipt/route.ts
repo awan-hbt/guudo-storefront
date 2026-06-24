@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
-import { notifyAdminReceiptUploaded } from "@/lib/watzap";
+import { notifyAdminReceiptUploaded } from "@/lib/whatsapp";
 
 export async function PATCH(req: NextRequest) {
   const { referenceCode, receiptUrl } = await req.json();
