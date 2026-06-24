@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
       total_price: totalPrice,
       receipt_url: "",
       memo: memo ? String(memo).trim() : null,
+      order_source: "storefront",
     })
     .select("id")
     .single();
