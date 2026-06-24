@@ -6,7 +6,7 @@ Run both providers for ~1 week before removing Watzap.
 
 ```env
 # Self-hosted (required for new path)
-WHATSAPP_SERVICE_URL=https://YOUR_VPS/whatsapp
+WHATSAPP_SERVICE_URL=http://203.194.115.32/whatsapp
 
 # Keep existing Watzap keys during parallel week
 WATZAP_API_KEY=...

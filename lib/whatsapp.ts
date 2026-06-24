@@ -30,7 +30,10 @@ function useWatzap(): boolean {
 async function sendToSelfHosted(payload: SendPayload): Promise<void> {
   const base = process.env.WHATSAPP_SERVICE_URL?.trim();
   const secret = process.env.PROXY_SECRET?.trim();
-  if (!base || !secret) return;
+  if (!base || !secret) {
+    console.warn("[whatsapp] skipped self-hosted — WHATSAPP_SERVICE_URL or PROXY_SECRET not set");
+    return;
+  }
 
   const url = base.replace(/\/$/, "") + "/send";
   const res = await fetch(url, {
@@ -42,10 +45,12 @@ async function sendToSelfHosted(payload: SendPayload): Promise<void> {
     body: JSON.stringify(payload),
   });
 
-  if (!res.ok && res.status !== 202) {
-    const text = await res.text().catch(() => "");
-    console.error("[whatsapp] self-hosted send failed:", res.status, text);
+  if (res.status === 202 || res.ok) {
+    console.log("[whatsapp] self-hosted queued:", payload.eventType, payload.referenceCode);
+    return;
   }
+  const text = await res.text().catch(() => "");
+  console.error("[whatsapp] self-hosted send failed:", res.status, text);
 }
 
 async function dispatch(payload: SendPayload): Promise<void> {
