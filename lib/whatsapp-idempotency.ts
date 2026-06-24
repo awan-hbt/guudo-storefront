@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { notifyCustomerConfirmed } from "@/lib/whatsapp";
+import { notifyCustomerConfirmed, notifyAdminPaymentConfirmed } from "@/lib/whatsapp";
 
 const PAID_STATUSES = new Set(["paid", "confirmed"]);
 
@@ -39,6 +39,10 @@ export async function notifyPaymentConfirmedOnce(
 
   await notifyCustomerConfirmed(params).catch((err) => {
     console.error("[whatsapp] notifyCustomerConfirmed failed:", err);
+  });
+
+  await notifyAdminPaymentConfirmed(params).catch((err) => {
+    console.error("[whatsapp] notifyAdminPaymentConfirmed failed:", err);
   });
 }
 

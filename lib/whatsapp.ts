@@ -4,7 +4,12 @@ import {
   notifyCustomerOrderReceived as watzapOrderReceived,
 } from "@/lib/watzap";
 
-type EventType = "order_received" | "payment_confirmed" | "admin_receipt";
+type EventType =
+  | "order_received"
+  | "payment_confirmed"
+  | "admin_receipt"
+  | "admin_new_order"
+  | "admin_payment_confirmed";
 
 interface SendPayload {
   eventType: EventType;
@@ -94,6 +99,38 @@ export async function notifyAdminReceiptUploaded(params: {
     totalPrice: params.totalPrice,
     memo: params.memo,
     receiptUrl: params.receiptUrl,
+  });
+}
+
+export async function notifyAdminNewOrder(params: {
+  phone: string;
+  name: string;
+  referenceCode: string;
+  totalPrice: number;
+  memo?: string | null;
+}): Promise<void> {
+  await dispatch({
+    eventType: "admin_new_order",
+    phone: params.phone,
+    name: params.name,
+    referenceCode: params.referenceCode,
+    totalPrice: params.totalPrice,
+    memo: params.memo ?? null,
+  });
+}
+
+export async function notifyAdminPaymentConfirmed(params: {
+  phone: string;
+  name: string;
+  referenceCode: string;
+  totalPrice: number;
+}): Promise<void> {
+  await dispatch({
+    eventType: "admin_payment_confirmed",
+    phone: params.phone,
+    name: params.name,
+    referenceCode: params.referenceCode,
+    totalPrice: params.totalPrice,
   });
 }
 

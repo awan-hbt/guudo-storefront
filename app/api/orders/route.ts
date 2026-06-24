@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
-import { notifyCustomerOrderReceived } from "@/lib/whatsapp";
+import { notifyCustomerOrderReceived, notifyAdminNewOrder } from "@/lib/whatsapp";
 
 interface OrderItemInput {
   menuItemId: string;
@@ -95,6 +95,13 @@ export async function POST(req: NextRequest) {
   }
 
   await notifyCustomerOrderReceived({ phone, name, referenceCode, totalPrice }).catch(() => {});
+  await notifyAdminNewOrder({
+    phone,
+    name,
+    referenceCode,
+    totalPrice,
+    memo: memo ? String(memo).trim() : null,
+  }).catch(() => {});
 
   // Optionally create iPaymu QRIS payment
   const proxyUrl = process.env.IPAYMU_PROXY_URL?.trim();
