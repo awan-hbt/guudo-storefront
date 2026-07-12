@@ -10,8 +10,9 @@ export async function GET() {
     supabase
       .from("menu_items")
       .select(
-        "id, name, description, price, category, unit, image_url, stock_group_id, stock_available, sort_order"
+        "id, name, description, price, category, unit, image_url, stock_group_id, stock_available, sort_order, variant_group"
       )
+      .eq("is_active", true)
       .order("sort_order", { ascending: true }),
     supabase.from("stock_groups").select("id, available"),
   ]);
@@ -37,6 +38,7 @@ export async function GET() {
       ? (groupMap[item.stock_group_id] ?? 0)
       : (item.stock_available ?? 0),
     sortOrder: item.sort_order,
+    variantGroup: item.variant_group ?? null,
   }));
 
   return NextResponse.json({ items });

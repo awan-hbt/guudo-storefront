@@ -18,15 +18,72 @@ interface MenuItem {
   stockAvailable: number;
   stockGroupId: string | null;
   sortOrder: number;
+  variantGroup: string | null;
 }
 
 type Step = "browsing" | "checkout" | "payment" | "confirmed";
 type PaymentMethod = "qris" | "transfer";
 
+interface VariantGroup {
+  key: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  variants: MenuItem[];
+  sortOrder: number;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatPrice(n: number) {
   return `Rp ${n.toLocaleString("id-ID")}`;
+}
+
+function formatUnitLabel(unit: string) {
+  if (/^\d+pc$/i.test(unit)) {
+    return unit.replace(/^(\d+)pc$/i, "$1 pc");
+  }
+  return unit;
+}
+
+function groupVariantItems(items: MenuItem[]): {
+  standalone: MenuItem[];
+  groups: VariantGroup[];
+} {
+  const standalone: MenuItem[] = [];
+  const groupMap = new Map<string, VariantGroup>();
+
+  for (const item of items) {
+    if (!item.variantGroup) {
+      standalone.push(item);
+      continue;
+    }
+    const existing = groupMap.get(item.variantGroup);
+    if (existing) {
+      existing.variants.push(item);
+      existing.sortOrder = Math.min(existing.sortOrder, item.sortOrder);
+      if (!existing.imageUrl && item.imageUrl) existing.imageUrl = item.imageUrl;
+      if (!existing.description && item.description) existing.description = item.description;
+    } else {
+      groupMap.set(item.variantGroup, {
+        key: item.variantGroup,
+        name: item.name,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        variants: [item],
+        sortOrder: item.sortOrder,
+      });
+    }
+  }
+
+  const groups = Array.from(groupMap.values())
+    .map((g) => ({
+      ...g,
+      variants: [...g.variants].sort((a, b) => a.price - b.price),
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  return { standalone, groups };
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -90,6 +147,8 @@ export default function OrderPage() {
   // ── Cart ──
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
+  // Selected size SKU id per variant_group (defaults to cheapest / 4pc)
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
 
   // ── Flow ──
   const [step, setStep] = useState<Step>("browsing");
@@ -157,7 +216,27 @@ export default function OrderPage() {
       fetch("/api/config").then((r) => r.json()),
     ])
       .then(([stockData, configData]) => {
-        setMenuItems(stockData.items ?? []);
+        const items: MenuItem[] = (stockData.items ?? []).map((item: MenuItem & { variantGroup?: string | null }) => ({
+          ...item,
+          variantGroup: item.variantGroup ?? null,
+        }));
+        setMenuItems(items);
+
+        // Default each variant group to the cheapest size (4pc)
+        const defaults: Record<string, string> = {};
+        for (const item of items) {
+          if (!item.variantGroup) continue;
+          const current = defaults[item.variantGroup];
+          if (!current) {
+            defaults[item.variantGroup] = item.id;
+          } else {
+            const currentItem = items.find((i) => i.id === current);
+            if (currentItem && item.price < currentItem.price) {
+              defaults[item.variantGroup] = item.id;
+            }
+          }
+        }
+        setSelectedVariants(defaults);
         setIpaymuEnabled(configData.ipaymuEnabled ?? false);
         setLoading(false);
       })
@@ -465,6 +544,7 @@ export default function OrderPage() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const mainItems = menuItems.filter((i) => i.category === "main");
+  const { standalone: standaloneMains, groups: mainVariantGroups } = groupVariantItems(mainItems);
   const addonItems = menuItems.filter((i) => i.category === "addon");
   const frozenItems = menuItems.filter((i) => i.category === "frozen");
   const drinksItems = menuItems.filter((i) => i.category === "drinks");
@@ -537,57 +617,150 @@ export default function OrderPage() {
                   <div className="text-center py-20 text-stone-400">Loading menu...</div>
                 ) : (
                   <>
-                    {mainItems.length > 0 && (
+                    {(standaloneMains.length > 0 || mainVariantGroups.length > 0) && (
                       <section className="mb-10">
-                        <h2 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-4">
-                          Main Dish
-                        </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {mainItems.map((item) => (
-                            <div
-                              key={item.id}
-                              className="bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex"
-                            >
-                              <div className="relative w-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
-                                {item.imageUrl ? (
-                                  <Image
-                                    src={item.imageUrl}
-                                    alt={item.name}
-                                    fill
-                                    className="object-cover"
-                                    sizes="112px"
-                                  />
-                                ) : (
-                                  <span className="text-3xl select-none">🍢</span>
-                                )}
-                              </div>
-                              <div className="p-4 flex flex-col flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2 mb-1">
-                                  <h3 className="font-semibold text-stone-900 text-sm leading-snug">
-                                    {item.name}
-                                  </h3>
-                                  <StockBadge stock={item.stockAvailable} />
+                        {standaloneMains.length > 0 && (
+                          <>
+                            <h2 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-4">
+                              Main Dish
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                              {standaloneMains.map((item) => (
+                                <div
+                                  key={item.id}
+                                  className="bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex"
+                                >
+                                  <div className="relative w-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
+                                    {item.imageUrl ? (
+                                      <Image
+                                        src={item.imageUrl}
+                                        alt={item.name}
+                                        fill
+                                        className="object-cover"
+                                        sizes="112px"
+                                      />
+                                    ) : (
+                                      <span className="text-3xl select-none">🍢</span>
+                                    )}
+                                  </div>
+                                  <div className="p-4 flex flex-col flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                      <h3 className="font-semibold text-stone-900 text-sm leading-snug">
+                                        {item.name}
+                                      </h3>
+                                      <StockBadge stock={item.stockAvailable} />
+                                    </div>
+                                    {item.description && (
+                                      <p className="text-stone-400 text-xs leading-relaxed mb-3 line-clamp-2">
+                                        {item.description}
+                                      </p>
+                                    )}
+                                    <div className="mt-auto flex items-center justify-between gap-2">
+                                      <span className="font-bold text-amber-600 text-sm">
+                                        {formatPrice(item.price)}
+                                      </span>
+                                      <QtyControl
+                                        qty={cart[item.id] ?? 0}
+                                        onAdd={() => addToCart(item.id)}
+                                        onRemove={() => removeFromCart(item.id)}
+                                        disabled={item.stockAvailable <= 0 || (cart[item.id] ?? 0) >= item.stockAvailable}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
-                                {item.description && (
-                                  <p className="text-stone-400 text-xs leading-relaxed mb-3 line-clamp-2">
-                                    {item.description}
-                                  </p>
-                                )}
-                                <div className="mt-auto flex items-center justify-between gap-2">
-                                  <span className="font-bold text-amber-600 text-sm">
-                                    {formatPrice(item.price)}
-                                  </span>
-                                  <QtyControl
-                                    qty={cart[item.id] ?? 0}
-                                    onAdd={() => addToCart(item.id)}
-                                    onRemove={() => removeFromCart(item.id)}
-                                    disabled={item.stockAvailable <= 0 || (cart[item.id] ?? 0) >= item.stockAvailable}
-                                  />
-                                </div>
-                              </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </>
+                        )}
+
+                        {mainVariantGroups.length > 0 && (
+                          <>
+                            <h2 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-4">
+                              Dim Sum
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {mainVariantGroups.map((group) => {
+                                const selectedId =
+                                  selectedVariants[group.key] ?? group.variants[0]?.id;
+                                const selected =
+                                  group.variants.find((v) => v.id === selectedId) ??
+                                  group.variants[0];
+                                if (!selected) return null;
+                                return (
+                                  <div
+                                    key={group.key}
+                                    className="bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex"
+                                  >
+                                    <div className="relative w-28 flex-shrink-0 bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
+                                      {group.imageUrl ? (
+                                        <Image
+                                          src={group.imageUrl}
+                                          alt={group.name}
+                                          fill
+                                          className="object-cover"
+                                          sizes="112px"
+                                        />
+                                      ) : (
+                                        <span className="text-3xl select-none">🥟</span>
+                                      )}
+                                    </div>
+                                    <div className="p-4 flex flex-col flex-1 min-w-0">
+                                      <div className="flex items-start justify-between gap-2 mb-1">
+                                        <h3 className="font-semibold text-stone-900 text-sm leading-snug">
+                                          {group.name}
+                                        </h3>
+                                        <StockBadge stock={selected.stockAvailable} />
+                                      </div>
+                                      {group.description && (
+                                        <p className="text-stone-400 text-xs leading-relaxed mb-2 line-clamp-2">
+                                          {group.description}
+                                        </p>
+                                      )}
+                                      <div className="flex gap-1.5 mb-3">
+                                        {group.variants.map((v) => {
+                                          const active = v.id === selected.id;
+                                          return (
+                                            <button
+                                              key={v.id}
+                                              type="button"
+                                              onClick={() =>
+                                                setSelectedVariants((prev) => ({
+                                                  ...prev,
+                                                  [group.key]: v.id,
+                                                }))
+                                              }
+                                              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                                                active
+                                                  ? "bg-amber-500 text-white"
+                                                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                                              }`}
+                                            >
+                                              {formatUnitLabel(v.unit)}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                      <div className="mt-auto flex items-center justify-between gap-2">
+                                        <span className="font-bold text-amber-600 text-sm">
+                                          {formatPrice(selected.price)}
+                                        </span>
+                                        <QtyControl
+                                          qty={cart[selected.id] ?? 0}
+                                          onAdd={() => addToCart(selected.id)}
+                                          onRemove={() => removeFromCart(selected.id)}
+                                          disabled={
+                                            selected.stockAvailable <= 0 ||
+                                            (cart[selected.id] ?? 0) >= selected.stockAvailable
+                                          }
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
                       </section>
                     )}
 
@@ -814,7 +987,8 @@ export default function OrderPage() {
                 {cartItems.map(({ menuItem, quantity }) => (
                   <div key={menuItem.id} className="flex justify-between text-sm">
                     <span className="text-stone-600">
-                      {menuItem.name}{" "}
+                      {menuItem.name}
+                      {menuItem.unit !== "porsi" ? ` (${formatUnitLabel(menuItem.unit)})` : ""}{" "}
                       <span className="text-stone-400">×{quantity}</span>
                     </span>
                     <span className="font-medium text-stone-900">
@@ -1199,7 +1373,7 @@ function CartPanel({
                   {menuItem.name}{" "}
                   <span className="text-stone-400">
                     ×{quantity}
-                    {menuItem.unit !== "porsi" ? ` ${menuItem.unit}` : ""}
+                    {menuItem.unit !== "porsi" ? ` · ${formatUnitLabel(menuItem.unit)}` : ""}
                   </span>
                 </span>
                 <span className="font-semibold text-stone-900 flex-shrink-0">

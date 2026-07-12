@@ -13,6 +13,16 @@ interface MenuItem {
   unit: string;
   image_url: string | null;
   sort_order: number;
+  variant_group: string | null;
+}
+
+interface VariantGroup {
+  key: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  variants: MenuItem[];
+  sort_order: number;
 }
 
 async function getMenuItems(): Promise<MenuItem[]> {
@@ -20,7 +30,8 @@ async function getMenuItems(): Promise<MenuItem[]> {
     const supabase = createServiceClient();
     const { data } = await supabase
       .from("menu_items")
-      .select("id, name, description, price, category, unit, image_url, sort_order")
+      .select("id, name, description, price, category, unit, image_url, sort_order, variant_group")
+      .eq("is_active", true)
       .order("sort_order", { ascending: true });
     return data ?? [];
   } catch {
@@ -30,6 +41,53 @@ async function getMenuItems(): Promise<MenuItem[]> {
 
 function formatPrice(price: number) {
   return `Rp ${price.toLocaleString("id-ID")}`;
+}
+
+function formatUnitLabel(unit: string) {
+  if (/^\d+pc$/i.test(unit)) {
+    return unit.replace(/^(\d+)pc$/i, "$1 pc");
+  }
+  return unit;
+}
+
+function groupVariantItems(items: MenuItem[]): {
+  standalone: MenuItem[];
+  groups: VariantGroup[];
+} {
+  const standalone: MenuItem[] = [];
+  const groupMap = new Map<string, VariantGroup>();
+
+  for (const item of items) {
+    if (!item.variant_group) {
+      standalone.push(item);
+      continue;
+    }
+    const existing = groupMap.get(item.variant_group);
+    if (existing) {
+      existing.variants.push(item);
+      existing.sort_order = Math.min(existing.sort_order, item.sort_order);
+      if (!existing.image_url && item.image_url) existing.image_url = item.image_url;
+      if (!existing.description && item.description) existing.description = item.description;
+    } else {
+      groupMap.set(item.variant_group, {
+        key: item.variant_group,
+        name: item.name,
+        description: item.description,
+        image_url: item.image_url,
+        variants: [item],
+        sort_order: item.sort_order,
+      });
+    }
+  }
+
+  const groups = Array.from(groupMap.values())
+    .map((g) => ({
+      ...g,
+      variants: [...g.variants].sort((a, b) => a.price - b.price),
+    }))
+    .sort((a, b) => a.sort_order - b.sort_order);
+
+  return { standalone, groups };
 }
 
 function MenuItemCard({ item }: { item: MenuItem }) {
@@ -66,6 +124,40 @@ function MenuItemCard({ item }: { item: MenuItem }) {
   );
 }
 
+function VariantGroupCard({ group }: { group: VariantGroup }) {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-stone-100 flex flex-col">
+      <div className="relative aspect-[4/3] bg-gradient-to-br from-amber-900 to-stone-800 flex items-center justify-center">
+        {group.image_url ? (
+          <Image
+            src={group.image_url}
+            alt={group.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <span className="text-5xl select-none">🥟</span>
+        )}
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="font-semibold text-stone-900 text-base leading-snug">{group.name}</h3>
+        {group.description && (
+          <p className="text-stone-500 text-sm mt-1 flex-1 leading-relaxed">{group.description}</p>
+        )}
+        <div className="mt-3 space-y-1.5">
+          {group.variants.map((v) => (
+            <div key={v.id} className="flex items-center justify-between text-sm">
+              <span className="text-stone-500">{formatUnitLabel(v.unit)}</span>
+              <span className="font-bold text-amber-600">{formatPrice(v.price)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AddonCard({ item }: { item: MenuItem }) {
   return (
     <div className="bg-white rounded-xl p-3 border border-stone-100 shadow-sm flex items-center gap-3">
@@ -92,6 +184,7 @@ function AddonCard({ item }: { item: MenuItem }) {
 export default async function HomePage() {
   const items = await getMenuItems();
   const mainItems = items.filter((i) => i.category === "main");
+  const { standalone: standaloneMains, groups: mainVariantGroups } = groupVariantItems(mainItems);
   const addonItems = items.filter((i) => i.category === "addon");
   const frozenItems = items.filter((i) => i.category === "frozen");
   const drinksItems = items.filter((i) => i.category === "drinks");
@@ -211,14 +304,27 @@ export default async function HomePage() {
             </p>
           </div>
 
-          {mainItems.length > 0 && (
+          {standaloneMains.length > 0 && (
             <>
               <h3 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-5">
                 Main Dish
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
-                {mainItems.map((item) => (
+                {standaloneMains.map((item) => (
                   <MenuItemCard key={item.id} item={item} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {mainVariantGroups.length > 0 && (
+            <>
+              <h3 className="text-xs font-bold text-amber-600 tracking-[0.25em] uppercase mb-5">
+                Dim Sum
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+                {mainVariantGroups.map((group) => (
+                  <VariantGroupCard key={group.key} group={group} />
                 ))}
               </div>
             </>

@@ -33,11 +33,12 @@ create table menu_items (
   name            text not null,
   description     text,
   price           int  not null,          -- IDR, whole number
-  category        text not null check (category in ('main', 'addon', 'frozen', 'drinks')),
+  category        text not null check (category in ('main', 'addon', 'frozen', 'drinks', 'hidden')),
   unit            text not null default 'porsi',
   stock_group_id  text references stock_groups(id),
   stock_available int,                    -- null when managed via stock_group
-  sort_order      int  not null default 0
+  sort_order      int  not null default 0,
+  is_active       boolean not null default true
 );
 
 insert into menu_items
