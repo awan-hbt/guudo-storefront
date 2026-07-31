@@ -9,7 +9,7 @@ interface MenuItem {
   name: string;
   description: string | null;
   price: number;
-  category: "main" | "addon" | "frozen" | "drinks";
+  category: "main" | "addon" | "frozen" | "drinks" | "dessert";
   unit: string;
   imageUrl: string | null;
   stockAvailable: number;
@@ -303,6 +303,7 @@ export default function DineInPage() {
   const addonItems = menuItems.filter((i) => i.category === "addon");
   const frozenItems = menuItems.filter((i) => i.category === "frozen");
   const drinksItems = menuItems.filter((i) => i.category === "drinks");
+  const dessertItems = menuItems.filter((i) => i.category === "dessert");
 
   function renderMenuCard(
     item: MenuItem,
@@ -582,13 +583,26 @@ export default function DineInPage() {
                     )}
 
                     {drinksItems.length > 0 && (
-                      <section>
+                      <section className={dessertItems.length > 0 ? "mb-10" : ""}>
                         <h2 className="text-xs font-bold text-violet-600 tracking-[0.25em] uppercase mb-4">
                           Drinks
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {drinksItems.map((item) =>
                             renderMenuCard(item, "from-violet-900 to-stone-800", "🥤")
+                          )}
+                        </div>
+                      </section>
+                    )}
+
+                    {dessertItems.length > 0 && (
+                      <section>
+                        <h2 className="text-xs font-bold text-rose-600 tracking-[0.25em] uppercase mb-4">
+                          Dessert
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {dessertItems.map((item) =>
+                            renderMenuCard(item, "from-rose-900 to-stone-800", "🍰")
                           )}
                         </div>
                       </section>
