@@ -1103,6 +1103,7 @@ export default function OrderPage() {
                     <option value="Kuttab Ummul Quro Pusat">Kuttab Ummul Quro Pusat</option>
                     <option value="Petrolab Services-Utan Kayu">Petrolab Services-Utan Kayu</option>
                     <option value="Mirorim Kemang Pratama">Mirorim Kemang Pratama</option>
+                    <option value="Sentra Alam Muzzammil">Sentra Alam Muzzammil</option>
                   </select>
                 </div>
                 {building === "RDTX Square" ? (
