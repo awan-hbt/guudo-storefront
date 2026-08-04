@@ -1061,13 +1061,14 @@ export default function OrderPage() {
               </div>
             </div>
 
-            {/* Contact form */}
+            {/* Delivery details */}
             <div className="bg-white rounded-2xl border border-stone-100 p-5 mb-6">
-              <h2 className="font-semibold text-stone-700 text-sm mb-4">Your Details</h2>
+              <h2 className="font-semibold text-stone-700 text-sm">Delivery Details</h2>
+              <p className="text-xs text-stone-500 mt-1 mb-4">Where should we deliver your food?</p>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Name <span className="text-red-500">*</span>
+                    Recipient Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1091,7 +1092,7 @@ export default function OrderPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Building <span className="text-red-500">*</span>
+                    Delivery Building <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={building}
@@ -1109,7 +1110,7 @@ export default function OrderPage() {
                 {building === "RDTX Square" ? (
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Floor
+                      Delivery Floor
                     </label>
                     <select
                       value={floor}
@@ -1124,7 +1125,7 @@ export default function OrderPage() {
                 ) : (
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Floor / Room Number / Other Notes
+                      Floor / Room Number / Delivery Notes
                     </label>
                     <input
                       type="text"
