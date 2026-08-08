@@ -156,8 +156,10 @@ export default function OrderPage() {
   // ── Form ──
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [locationType, setLocationType] = useState<"building" | "home">("building");
   const [building, setBuilding] = useState("");
   const [floor, setFloor] = useState("");
+  const [homeAddress, setHomeAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("transfer");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -397,8 +399,20 @@ export default function OrderPage() {
     setFormError("");
     if (!name.trim()) { setFormError("Please enter your name."); return; }
     if (!phone.trim()) { setFormError("Please enter your phone number."); return; }
-    if (!building) { setFormError("Please select a building."); return; }
+    if (locationType === "building" && !building) {
+      setFormError("Please select a building.");
+      return;
+    }
+    if (locationType === "home" && !homeAddress.trim()) {
+      setFormError("Please enter your delivery address.");
+      return;
+    }
     if (cartItems.length === 0) { setFormError("Your cart is empty."); return; }
+
+    const memo =
+      locationType === "home"
+        ? ["Home", homeAddress.trim(), floor.trim()].filter(Boolean).join(" – ")
+        : [building, floor.trim()].filter(Boolean).join(" – ") || null;
 
     setSubmitting(true);
     setOrderError("");
@@ -410,7 +424,7 @@ export default function OrderPage() {
         body: JSON.stringify({
           name: name.trim(),
           phone: phone.trim(),
-          memo: [building, floor.trim()].filter(Boolean).join(" – ") || null,
+          memo,
           items: cartItems.map(({ menuItem, quantity }) => ({
             menuItemId: menuItem.id,
             quantity,
@@ -1090,51 +1104,143 @@ export default function OrderPage() {
                     className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Delivery Building <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={building}
-                    onChange={(e) => { setBuilding(e.target.value); setFloor(""); }}
-                    className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition bg-white"
-                  >
-                    <option value="">Select building…</option>
-                    <option value="RDTX Square">RDTX Square</option>
-                    <option value="Kuttab Ummul Quro Pusat">Kuttab Ummul Quro Pusat</option>
-                    <option value="Petrolab Services-Utan Kayu">Petrolab Services-Utan Kayu</option>
-                    <option value="Mirorim Kemang Pratama">Mirorim Kemang Pratama</option>
-                    <option value="Sentra Alam Muzzammil">Sentra Alam Muzzammil</option>
-                  </select>
-                </div>
-                {building === "RDTX Square" ? (
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Delivery Floor
-                    </label>
-                    <select
-                      value={floor}
-                      onChange={(e) => setFloor(e.target.value)}
-                      className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition bg-white"
+                  <p className="block text-sm font-medium text-stone-700 mb-2">
+                    Delivery location <span className="text-red-500">*</span>
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label
+                      className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        locationType === "building"
+                          ? "border-amber-400 bg-amber-50"
+                          : "border-stone-200 hover:border-stone-300"
+                      }`}
                     >
-                      <option value="">Select floor…</option>
-                      <option value="3F">3F</option>
-                      <option value="18F">18F</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                      Floor / Room Number / Delivery Notes
+                      <input
+                        type="radio"
+                        name="locationType"
+                        value="building"
+                        checked={locationType === "building"}
+                        onChange={() => {
+                          setLocationType("building");
+                          setHomeAddress("");
+                          setFloor("");
+                        }}
+                        className="mt-0.5 accent-amber-500"
+                      />
+                      <div>
+                        <p className="font-semibold text-stone-900 text-sm">Office building</p>
+                        <p className="text-stone-500 text-xs mt-0.5">
+                          Choose from registered buildings
+                        </p>
+                      </div>
                     </label>
-                    <input
-                      type="text"
-                      value={floor}
-                      onChange={(e) => setFloor(e.target.value)}
-                      placeholder="e.g. Floor 2, lobby, etc."
-                      className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
-                    />
+                    <label
+                      className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        locationType === "home"
+                          ? "border-amber-400 bg-amber-50"
+                          : "border-stone-200 hover:border-stone-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="locationType"
+                        value="home"
+                        checked={locationType === "home"}
+                        onChange={() => {
+                          setLocationType("home");
+                          setBuilding("");
+                          setFloor("");
+                        }}
+                        className="mt-0.5 accent-amber-500"
+                      />
+                      <div>
+                        <p className="font-semibold text-stone-900 text-sm">Home / other address</p>
+                        <p className="text-stone-500 text-xs mt-0.5">
+                          Type your full address manually
+                        </p>
+                      </div>
+                    </label>
                   </div>
+                </div>
+
+                {locationType === "building" ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                        Delivery Building <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={building}
+                        onChange={(e) => { setBuilding(e.target.value); setFloor(""); }}
+                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition bg-white"
+                      >
+                        <option value="">Select building…</option>
+                        <option value="RDTX Square">RDTX Square</option>
+                        <option value="Kuttab Ummul Quro Pusat">Kuttab Ummul Quro Pusat</option>
+                        <option value="Petrolab Services-Utan Kayu">Petrolab Services-Utan Kayu</option>
+                        <option value="Mirorim Kemang Pratama">Mirorim Kemang Pratama</option>
+                        <option value="Sentra Alam Muzzammil">Sentra Alam Muzzammil</option>
+                      </select>
+                    </div>
+                    {building === "RDTX Square" ? (
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                          Delivery Floor
+                        </label>
+                        <select
+                          value={floor}
+                          onChange={(e) => setFloor(e.target.value)}
+                          className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition bg-white"
+                        >
+                          <option value="">Select floor…</option>
+                          <option value="3F">3F</option>
+                          <option value="18F">18F</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                          Floor / Room Number / Delivery Notes
+                        </label>
+                        <input
+                          type="text"
+                          value={floor}
+                          onChange={(e) => setFloor(e.target.value)}
+                          placeholder="e.g. Floor 2, lobby, etc."
+                          className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                        Full Address <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={homeAddress}
+                        onChange={(e) => setHomeAddress(e.target.value)}
+                        placeholder="Street, RT/RW, kelurahan, kecamatan, city…"
+                        rows={3}
+                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition resize-y min-h-[88px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                        Delivery Notes
+                      </label>
+                      <input
+                        type="text"
+                        value={floor}
+                        onChange={(e) => setFloor(e.target.value)}
+                        placeholder="e.g. House number, gate color, landmarks…"
+                        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             </div>
